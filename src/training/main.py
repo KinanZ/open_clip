@@ -14,13 +14,13 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler
 
-from clip.clip import _transform_default, _transform_custom, load
-from clip.model import convert_weights, CLIP
-from training.train import train, evaluate
-from training.data import get_data
-from training.params import parse_args
-from training.logger import setup_primary_logging, setup_worker_logging
-from training.scheduler import cosine_lr
+from src.clip.clip import _transform_default, _transform_custom, load
+from src.clip.model import convert_weights, CLIP
+from train import train, evaluate
+from data import get_data
+from params import parse_args
+from logger import setup_primary_logging, setup_worker_logging
+from scheduler import cosine_lr
 
 # Used by https://github.com/openai/CLIP/issues/83 but not below.
 # Keeping it incase needed.
@@ -30,8 +30,10 @@ def convert_models_to_fp32(model):
         if p.grad:
             p.grad.data = p.grad.data.float()
 
+
 def is_master(args):
     return (not args.distributed) or args.gpu == 0 or args.dp
+
 
 def main_worker(gpu, ngpus_per_node, log_queue, args):
     args.gpu = gpu
@@ -68,7 +70,8 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         model, preprocess_train, preprocess_val = load(
             args.model,
             jit=False,
-            is_train=True)
+            is_train=True,
+            custom_aug=args.custom_aug)
     else:
         model_config_file = Path(__file__).parent / f"model_configs/{args.model.replace('/', '-')}.json"
         print('Loading model from', model_config_file)

@@ -11,8 +11,8 @@ from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip
 from tqdm import tqdm
 
-from clip.model import build_model
-from clip.tokenizer import SimpleTokenizer as _Tokenizer
+from model import build_model
+from tokenizer import SimpleTokenizer as _Tokenizer
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
@@ -106,7 +106,7 @@ def available_models() -> List[str]:
     return list(_MODELS.keys())
 
 
-def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit=True, is_train=False, pretrained=True):
+def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit=True, is_train=False, pretrained=True, custom_aug=None):
     """Load a CLIP model
     Parameters
     ----------
@@ -150,9 +150,17 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
 
         if str(device) == "cpu":
             model.float()
+
+        if custom_aug:
+            transform_train = _transform_custom(model.visual.input_resolution, is_train=True)
+            transform_val = _transform_custom(model.visual.input_resolution, is_train=False)
+        else:
+            transform_train = _transform_default(model.visual.input_resolution, is_train=True)
+            transform_val = _transform_default(model.visual.input_resolution, is_train=False)
+
         return model, \
-               _transform(model.visual.input_resolution, is_train=True), \
-               _transform(model.visual.input_resolution, is_train=False)
+               transform_train, \
+               transform_val
 
     # patch the device names
     device_holder = torch.jit.trace(lambda: torch.ones([]).to(torch.device(device)), example_inputs=[])
@@ -196,9 +204,16 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
 
         model.float()
 
+    if custom_aug:
+        transform_train = _transform_custom(model.visual.input_resolution, is_train=True)
+        transform_val = _transform_custom(model.visual.input_resolution, is_train=False)
+    else:
+        transform_train = _transform_default(model.visual.input_resolution, is_train=True)
+        transform_val = _transform_default(model.visual.input_resolution, is_train=False)
+
     return model, \
-           _transform(model.input_resolution.item(), is_train=True), \
-           _transform(model.input_resolution.item(), is_train=False)
+           transform_train, \
+           transform_val
 
 
 def tokenize(texts: Union[str, List[str]], context_length: int = 77) -> torch.LongTensor:

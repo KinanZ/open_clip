@@ -22,7 +22,7 @@ import torchvision.datasets as datasets
 from webdataset.utils import identity
 import webdataset as wds
 
-from clip.clip import tokenize
+from src.clip.clip import tokenize
 
 
 class CsvDataset(Dataset):
@@ -48,8 +48,10 @@ class DataInfo:
     dataloader: DataLoader
     sampler: DistributedSampler
 
+
 def preprocess_txt(text):
     return tokenize([str(text)])[0]
+
 
 def get_dataset_size(shards):
     shards_list = list(braceexpand.braceexpand(shards))
@@ -59,6 +61,7 @@ def get_dataset_size(shards):
         [int(sizes[os.path.basename(shard)]) for shard in shards_list])
     num_shards = len(shards_list)
     return total_size, num_shards
+
 
 def get_imagenet(args, preprocess_fns, split):
     assert split in ["train", "val", "v2"]
@@ -105,6 +108,7 @@ def get_imagenet(args, preprocess_fns, split):
 
     return DataInfo(dataloader, sampler)
 
+
 def count_samples(dataloader):
     os.environ["WDS_EPOCH"] = "0"
     n_elements, n_batches = 0, 0
@@ -113,6 +117,7 @@ def count_samples(dataloader):
         n_elements += len(images)
         assert len(images) == len(texts)
     return n_elements, n_batches
+
 
 def get_wds_dataset(args, preprocess_img, is_train):
     input_shards = args.train_data if is_train else args.val_data
@@ -151,6 +156,7 @@ def get_wds_dataset(args, preprocess_img, is_train):
     dataloader.num_samples = num_samples
 
     return DataInfo(dataloader, None)
+
 
 def get_csv_dataset(args, preprocess_fn, is_train):
     input_filename = args.train_data if is_train else args.val_data

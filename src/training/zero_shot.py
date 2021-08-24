@@ -1,6 +1,6 @@
 from tqdm import tqdm
 import torch
-import clip.clip as clip
+import src.clip.clip as clip
 from .imagenet_zeroshot_data import imagenet_classnames, openai_imagenet_template
 
 import logging
