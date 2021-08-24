@@ -11,8 +11,11 @@ from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip
 from tqdm import tqdm
 
-from model import build_model
-from tokenizer import SimpleTokenizer as _Tokenizer
+import sys
+sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
+
+from training.model import build_model
+from training.tokenizer import SimpleTokenizer as _Tokenizer
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()

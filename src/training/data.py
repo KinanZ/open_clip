@@ -22,7 +22,8 @@ import torchvision.datasets as datasets
 from webdataset.utils import identity
 import webdataset as wds
 
-from src.clip.clip import tokenize
+sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
+from clip.clip import tokenize
 
 
 class CsvDataset(Dataset):
