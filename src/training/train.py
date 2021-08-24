@@ -11,7 +11,7 @@ import torch.distributed as dist
 import sys
 
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
-from trainig.zero_shot import zero_shot_eval
+from training.zero_shot import zero_shot_eval
 
 import pdb
 import wandb

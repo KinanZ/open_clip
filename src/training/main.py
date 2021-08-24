@@ -18,11 +18,11 @@ from torch.cuda.amp import GradScaler
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import _transform_default, _transform_custom, load
 from clip.model import convert_weights, CLIP
-from traning.train import train, evaluate
-from traning.data import get_data
-from traning.params import parse_args
-from traning.logger import setup_primary_logging, setup_worker_logging
-from traning.scheduler import cosine_lr
+from training.train import train, evaluate
+from training.data import get_data
+from training.params import parse_args
+from training.logger import setup_primary_logging, setup_worker_logging
+from training.scheduler import cosine_lr
 
 # Used by https://github.com/openai/CLIP/issues/83 but not below.
 # Keeping it incase needed.
