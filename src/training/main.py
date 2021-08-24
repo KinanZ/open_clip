@@ -15,9 +15,8 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler
 
-sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
-from src.clip.clip import _transform_default, _transform_custom, load
-from src.clip.model import convert_weights, CLIP
+from ..clip.clip import _transform_default, _transform_custom, load
+from ..clip.model import convert_weights, CLIP
 from train import train, evaluate
 from data import get_data
 from params import parse_args
