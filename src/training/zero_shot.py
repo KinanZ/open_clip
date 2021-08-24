@@ -2,7 +2,8 @@ from tqdm import tqdm
 import torch
 import sys
 
-from ..clip import clip
+sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
+import clip.clip as clip
 from .imagenet_zeroshot_data import imagenet_classnames, openai_imagenet_template
 
 import logging
