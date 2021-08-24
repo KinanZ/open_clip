@@ -8,10 +8,11 @@ import torch.nn as nn
 
 from torch.cuda.amp import autocast
 import torch.distributed as dist
-
-from .zero_shot import zero_shot_eval
-
 import sys
+
+sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
+from trainig.zero_shot import zero_shot_eval
+
 import pdb
 import wandb
 
