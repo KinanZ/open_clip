@@ -21,6 +21,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data.csv"  \
   --csv-img-key filepath \
   --csv-caption-key sentence \
+  --csv-separator="," \
   --warmup 10000 \
   --batch-size=16 \
   --lr=1e-3 \
