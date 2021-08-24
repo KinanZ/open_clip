@@ -91,15 +91,15 @@ def parse_args():
         "--warmup", type=int, default=10000, help="Number of steps to warmup for."
     )
     parser.add_argument("--use-bn-sync",
-        default=False,
-        action="store_true",
-        help="Whether to use batch norm sync.")
+                        default=False,
+                        action="store_true",
+                        help="Whether to use batch norm sync.")
     parser.add_argument(
         "--gpu",
         type=int,
         default=None,
         help="Specify a single GPU to run the code on for debugging."
-        "Leave at None to use all available GPUs.",
+             "Leave at None to use all available GPUs.",
     )
     parser.add_argument(
         "--skip-scheduler",
@@ -194,6 +194,19 @@ def parse_args():
         default=None,
         type=lambda x: [int(a) for a in x.split(",")],
         help="In DP, which GPUs to use for multigpu training",
+    )
+    # My params
+    parser.add_argument(
+        "--default-aug",
+        default=False,
+        action="store_true",
+        help="Whether to use the default clip transforms"
+    )
+    parser.add_argument(
+        "--custom-aug",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom transforms"
     )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate

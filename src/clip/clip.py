@@ -8,7 +8,7 @@ from typing import Union, List
 
 import torch
 from PIL import Image
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop
+from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip
 from tqdm import tqdm
 
 from clip.model import build_model
@@ -56,11 +56,13 @@ def _download(url: str, root: str = os.path.expanduser("~/.cache/clip")):
 
     return download_target
 
+
 def _convert_to_rgb(image):
     return image.convert('RGB')
 
-def _transform(n_px: int, is_train: bool):
-    normalize = Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+
+def _transform_default(n_px: int, is_train: bool):
+    normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
             RandomResizedCrop(n_px, scale=(0.9, 1.0), interpolation=Image.BICUBIC),
@@ -77,6 +79,26 @@ def _transform(n_px: int, is_train: bool):
             normalize,
         ])
 
+
+def _transform_custom(n_px: int, is_train: bool):
+    normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
+    if is_train:
+        return Compose([
+            Resize(n_px, interpolation=Image.BICUBIC),
+            RandomAffine(45, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
+            RandomHorizontalFlip(),
+            _convert_to_rgb,
+            ToTensor(),
+            normalize,
+        ])
+    else:
+        return Compose([
+            Resize(n_px, interpolation=Image.BICUBIC),
+            CenterCrop(n_px),
+            _convert_to_rgb,
+            ToTensor(),
+            normalize,
+        ])
 
 
 def available_models() -> List[str]:

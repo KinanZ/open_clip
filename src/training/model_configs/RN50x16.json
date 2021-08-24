@@ -1,6 +1,6 @@
 {
     "embed_dim": 768,
-    "image_resolution": 384,
+    "image_resolution": 512,
     "vision_layers": [
         6,
         8,

@@ -22,8 +22,6 @@ import torchvision.datasets as datasets
 from webdataset.utils import identity
 import webdataset as wds
 
-
-
 from clip.clip import tokenize
 
 

@@ -14,7 +14,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler
 
-from clip.clip import _transform, load
+from clip.clip import _transform_default, _transform_custom, load
 from clip.model import convert_weights, CLIP
 from training.train import train, evaluate
 from training.data import get_data
@@ -77,9 +77,15 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
             model_info = json.load(f)
         model = CLIP(**model_info)
         convert_weights(model)
-        preprocess_train = _transform(model.visual.input_resolution, is_train=True)
-        preprocess_val = _transform(model.visual.input_resolution, is_train=False)
-
+        if args.default_aug:
+            preprocess_train = _transform_default(model.visual.input_resolution, is_train=True)
+            preprocess_val = _transform_default(model.visual.input_resolution, is_train=False)
+        elif args.custom_aug:
+            preprocess_train = _transform_custom(model.visual.input_resolution, is_train=True)
+            preprocess_val = _transform_custom(model.visual.input_resolution, is_train=False)
+        else:
+            print('please choose the type of transforms to use in the experiment, default_aug or custom_aug')
+            return -1
 
     # See https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/81372
     if args.precision == "amp" or args.precision == "fp32" or args.gpu is None:
