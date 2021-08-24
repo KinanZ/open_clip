@@ -12,10 +12,10 @@ from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normal
 from tqdm import tqdm
 
 import sys
-sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 
-from training.model import build_model
-from training.tokenizer import SimpleTokenizer as _Tokenizer
+sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
+from clip.model import build_model
+from clip.tokenizer import SimpleTokenizer as _Tokenizer
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
