@@ -21,7 +21,7 @@ dependencies:
   - click=7.1.2=pyhd3eb1b0_0
   - coverage=5.5=py36h27cfd23_2
   - cryptography=3.4.7=py36hd23ed53_0
-  - cudatoolkit=11.0.221=h6bb024c_0
+  - cudatoolkit=10.2
   - cython=0.29.23=py36h2531618_0
   - dataclasses=0.8=pyh4f3eec9_6
   - faiss-gpu=1.4.0=py36_cuda8.0.61_1
@@ -78,7 +78,7 @@ dependencies:
   - python=3.6.13=hdb3f193_0
   - python-dateutil=2.8.1=pyhd3eb1b0_0
   - python_abi=3.6=1_cp36m
-  - pytorch=1.7.1=py3.6_cuda11.0.221_cudnn8.0.5_0
+  - pytorch=1.7.1=py3.6_cuda10.2_cudnn8.0.5_0
   - pytz=2021.1=pyhd3eb1b0_0
   - readline=8.1=h27cfd23_0
   - regex=2021.4.4=py36h27cfd23_0
@@ -95,7 +95,7 @@ dependencies:
   - threadpoolctl=2.1.0=pyh5ca1d4c_0
   - tk=8.6.10=hbc83047_0
   - torchaudio=0.7.2=py36
-  - torchvision=0.8.2=py36_cu110
+  - torchvision=0.8.2=py36_cu102
   - tqdm=4.59.0=pyhd3eb1b0_1
   - typing_extensions=3.7.4.3=pyha847dfd_0
   - urllib3=1.26.4=pyhd3eb1b0_0
@@ -148,5 +148,5 @@ dependencies:
     - wilds==1.1.0
     - "--editable=git+https://github.com/tmbdev/webdataset.git@a4f3ec08551b42f20b20cdc1ba32d12536eabc15#egg=webdataset"
     - git+https://github.com/modestyachts/ImageNetV2_pytorch
-    - https://pytorch-geometric.com/whl/torch-1.7.0+cu110/torch_scatter-2.0.6-cp36-cp36m-linux_x86_64.whl
+    - https://pytorch-geometric.com/whl/torch-1.7.0+cu102/torch_scatter-2.0.6-cp36-cp36m-linux_x86_64.whl
 prefix: /home/gamaga/anaconda3/envs/open_clip
