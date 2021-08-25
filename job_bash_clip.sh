@@ -1,6 +1,6 @@
 #PBS -N clip_test_0
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=4:gpus=4:nvidiaMin11GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -q student
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
@@ -14,7 +14,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --save-frequency 1 \
+  --save-frequency 20 \
   --zeroshot-frequency 1 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data.csv"  \
@@ -23,7 +23,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-caption-key sentence \
   --csv-separator="," \
   --warmup 10000 \
-  --batch-size=16 \
+  --batch-size=24 \
   --lr=1e-3 \
   --wd=0.1 \
   --epochs=3 \
