@@ -14,8 +14,8 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_run_1' \
-  --save-frequency 5 \
+  --name='clip_run_2' \
+  --save-frequency 10 \
   --zeroshot-frequency 1 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data.csv"  \
@@ -23,11 +23,11 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-separator="," \
-  --warmup 10000 \
+  --warmup 1000 \
   --batch-size=28 \
   --lr=1e-3 \
   --wd=0.1 \
-  --epochs=30 \
+  --epochs=100 \
   --workers=8 \
   --model RN50 \
   --default-aug \
