@@ -1,4 +1,4 @@
-#PBS -N clip_run_3
+#PBS -N clip_run_4
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -14,7 +14,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_run_3' \
+  --name='clip_run_4' \
   --save-frequency 10 \
   --zeroshot-frequency 1 \
   --report-to tensorboard \
