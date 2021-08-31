@@ -126,11 +126,11 @@ def parse_args():
         "--precision",
         choices=["amp", "fp16", "fp32"],
         default="amp",
-        help="Floating point precition."
+        help="Floating point precision."
     )
     parser.add_argument(
         "--model",
-        choices=["RN50", "RN101", "RN50x4", "ViT-B/32"],
+        choices=["RN18", "RN50", "RN101", "RN50x4", "ViT-B/32"],
         default="RN50",
         help="Name of the vision backbone to use.",
     )
