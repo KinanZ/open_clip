@@ -2,7 +2,7 @@
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin24GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
-#PBS -q default-cpu
+#PBS -q student
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
 
