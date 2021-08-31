@@ -1,4 +1,4 @@
-#PBS -N clip_small_dataset_RN50
+#PBS -N clip_small_dataset_RN50_pretrained
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -14,7 +14,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_small_dataset_RN50' \
+  --name='clip_small_dataset_RN50_pretrained' \
   --save-frequency 20 \
   --zeroshot-frequency 1 \
   --report-to tensorboard \
@@ -29,6 +29,6 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --wd=0.1 \
   --epochs=100 \
   --workers=8 \
-  --model RN18 \
+  --model RN50 \
   --default-aug \
   --dist-url 'tcp://localhost:10010'
