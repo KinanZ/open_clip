@@ -27,7 +27,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=28 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=100 \
   --workers=8 \
   --model RN50 \
   --openai-pretrained \
