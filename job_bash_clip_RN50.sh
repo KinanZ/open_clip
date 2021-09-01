@@ -30,5 +30,6 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=2 \
   --workers=8 \
   --model RN50 \
+  --openai-pretrained \
   --default-aug \
   --dist-url 'tcp://localhost:10010'
