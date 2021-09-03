@@ -8,7 +8,7 @@ from typing import Union, List
 
 import torch
 from PIL import Image
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip
+from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip, functional
 from tqdm import tqdm
 
 import sys
@@ -68,6 +68,7 @@ def _transform_default(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
+            Resize(n_px, interpolation=Image.BICUBIC),
             RandomResizedCrop(n_px, scale=(0.9, 1.0), interpolation=Image.BICUBIC),
             _convert_to_rgb,
             ToTensor(),
@@ -87,7 +88,7 @@ def _transform_custom(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
             RandomAffine(45, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
             RandomHorizontalFlip(),
             _convert_to_rgb,
@@ -96,7 +97,7 @@ def _transform_custom(n_px: int, is_train: bool):
         ])
     else:
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
             CenterCrop(n_px),
             _convert_to_rgb,
             ToTensor(),
@@ -219,7 +220,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
            transform_val
 
 
-def tokenize(texts: Union[str, List[str]], context_length: int = 77) -> torch.LongTensor:
+def tokenize(texts: Union[str, List[str]], context_length: int = 118) -> torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
     Parameters
@@ -228,6 +229,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77) -> torch.Lo
         An input string or a list of input strings to tokenize
     context_length : int
         The context length to use; all CLIP models use 77 as the context length
+        In CCT dataset, the longest sentence was with 118 tokens in length.
     Returns
     -------
     A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length]
