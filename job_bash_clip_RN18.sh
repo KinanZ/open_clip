@@ -24,7 +24,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-caption-key sentence \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=112 \
+  --batch-size=108 \
   --lr=0.0002 \
   --wd=0.1 \
   --epochs=2 \
