@@ -14,7 +14,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_no_0_no_dup_RN18_test_4' \
+  --name='clip_no_0_no_dup_RN18_test_5' \
   --save-frequency 20 \
   --zeroshot-frequency 1 \
   --report-to tensorboard \
