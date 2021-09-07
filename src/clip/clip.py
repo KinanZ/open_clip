@@ -68,7 +68,7 @@ def _transform_default(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
-            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
+            Resize(n_px, interpolation=Image.BICUBIC),
             RandomResizedCrop(n_px, scale=(0.9, 1.0), interpolation=Image.BICUBIC),
             _convert_to_rgb,
             ToTensor(),
@@ -76,7 +76,7 @@ def _transform_default(n_px: int, is_train: bool):
         ])
     else:
         return Compose([
-            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
+            Resize(n_px, interpolation=Image.BICUBIC),
             CenterCrop(n_px),
             _convert_to_rgb,
             ToTensor(),
@@ -88,7 +88,7 @@ def _transform_custom(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
-            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
+            Resize(n_px, interpolation=Image.BICUBIC),
             RandomAffine(45, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
             RandomHorizontalFlip(),
             _convert_to_rgb,
@@ -97,7 +97,7 @@ def _transform_custom(n_px: int, is_train: bool):
         ])
     else:
         return Compose([
-            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
+            Resize(n_px, interpolation=Image.BICUBIC),
             CenterCrop(n_px),
             _convert_to_rgb,
             ToTensor(),
