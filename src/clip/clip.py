@@ -68,7 +68,7 @@ def _transform_default(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
             RandomResizedCrop(n_px, scale=(0.9, 1.0), interpolation=Image.BICUBIC),
             _convert_to_rgb,
             ToTensor(),
@@ -76,7 +76,7 @@ def _transform_default(n_px: int, is_train: bool):
         ])
     else:
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            Resize(n_px, interpolation=functional.InterpolationMode.BICUBIC),
             CenterCrop(n_px),
             _convert_to_rgb,
             ToTensor(),
