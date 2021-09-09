@@ -1,6 +1,6 @@
 #PBS -N clip_no_0_no_dup_RN18_512_aug_bigboy
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=4:ubuntu2004:gpus=1:nvidiaRTX3090,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ubuntu2004:ppn=4:gpus=1,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -q student
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
