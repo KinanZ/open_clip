@@ -31,4 +31,4 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --workers=8 \
   --model RN18ish \
   --default-aug \
-  --dist-url 'tcp://localhost:10018'
+  --dist-url 'tcp://localhost:10028'
