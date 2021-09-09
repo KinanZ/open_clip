@@ -3,7 +3,7 @@ import argparse
 
 def get_default_params(model_name):
     # Params from paper (https://arxiv.org/pdf/2103.00020.pdf)
-    if model_name in ["RN18", "RN18ish", "RN50", "RN101", "RN50x4"]:
+    if model_name in ["RN18", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4"]:
         return {"lr": 5.0e-4, "beta1": 0.9, "beta2": 0.999, "eps": 1.0e-8}
     elif model_name == "ViT-B/32":
         return {"lr": 5.0e-4, "beta1": 0.9, "beta2": 0.98, "eps": 1.0e-6}
@@ -130,7 +130,7 @@ def parse_args():
     )
     parser.add_argument(
         "--model",
-        choices=["RN18", "RN18ish", "RN50", "RN101", "RN50x4", "ViT-B/32"],
+        choices=["RN18", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4", "ViT-B/32"],
         default="RN50",
         help="Name of the vision backbone to use.",
     )
