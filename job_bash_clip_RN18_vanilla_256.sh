@@ -1,4 +1,4 @@
-#PBS -N clip_no_0_RN18ish
+#PBS -N clip_no_0_RN18ish_256
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -24,7 +24,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-caption-key sentence \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=96 \
+  --batch-size=86 \
   --lr=0.0002 \
   --wd=0.1 \
   --epochs=200 \
