@@ -1,4 +1,4 @@
-#PBS -N clip_no_0_RN18_256
+#PBS -N clip_no_0_RN18_256_aug
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=4:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -17,8 +17,8 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --name='clip_no_0_RN18_256' \
   --save-frequency 99 \
   --report-to tensorboard \
-  --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_0.csv"  \
-  --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_0.csv"  \
+  --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_0_no_dup.csv"  \
+  --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_0_no_dup.csv"  \
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-separator="," \
@@ -29,5 +29,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=200 \
   --workers=8 \
   --model RN18_256 \
-  --default-aug \
-  --dist-url 'tcp://localhost:10028'
+  --costum-aug \
+  --dist-url 'tcp://localhost:10001'
