@@ -29,5 +29,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=200 \
   --workers=8 \
   --model RN18 \
-  --costum-aug \
+  --custom-aug \
   --dist-url 'tcp://localhost:10018'
