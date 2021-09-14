@@ -130,7 +130,7 @@ def parse_args():
     )
     parser.add_argument(
         "--model",
-        choices=["RN18", "RN18_256", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4", "ViT-B/32"],
+        choices=["RN18", "RN18_pretrained", "RN18_256", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4", "ViT-B/32"],
         default="RN50",
         help="Name of the vision backbone to use.",
     )
