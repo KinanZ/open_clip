@@ -261,11 +261,12 @@ class CLIP(nn.Module):
         self.context_length = context_length
 
         if isinstance(vision_layers, (tuple, list)):
+            vision_heads = vision_width * 32 // 64
             if IN_pretraned:
                 if resnet_name == "resnet18":
                     self.visual = models.resnet18(progress=True, pretrained=True)
+                    self.visual.fc = AttentionPool2d(image_resolution // 32, embed_dim, vision_heads, embed_dim)
             else:
-                vision_heads = vision_width * 32 // 64
                 self.visual = ModifiedResNet(
                     layers=vision_layers,
                     output_dim=embed_dim,
