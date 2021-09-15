@@ -176,12 +176,9 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
-            print('if: ', image_features.shape)
-            print('it: ', text_features.shape)
             all_image_features.append(image_features)
             all_text_features.append(text_features)
             logit_scale = logit_scale.mean()
-            print('ls: ', logit_scale.shape)
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
 
