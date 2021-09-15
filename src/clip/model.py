@@ -265,7 +265,7 @@ class CLIP(nn.Module):
             if IN_pretraned:
                 if resnet_name == "resnet18":
                     self.visual = models.resnet18(progress=True, pretrained=True)
-                    self.visual.fc = AttentionPool2d(image_resolution // 32, embed_dim, vision_heads, embed_dim)
+                    self.visual.fc = nn.Linear(in_features=self.visual.fc.in_features, out_features=embed_dim)
             else:
                 self.visual = ModifiedResNet(
                     layers=vision_layers,
