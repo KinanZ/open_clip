@@ -145,8 +145,6 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
                 name = "train/" + name
                 if tb_writer is not None:
                     tb_writer.add_scalar(name, val, timestep)
-                if args.eval_train:
-                    tb_writer.add_scalar(name, train, timestep)
                 if args.wandb:
                     wandb.log({name: val, 'step': timestep})
 
@@ -201,7 +199,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         )
         loss = cumulative_loss / num_elements
         metrics.update(
-            **{"train_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
+            **{"val_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
         )
         metrics.update(zero_shot_metrics)
 
@@ -276,7 +274,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
         )
         loss = cumulative_loss / num_elements
         metrics.update(
-            **{"val_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
+            **{"train_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
         )
         metrics.update(zero_shot_metrics)
 
@@ -288,10 +286,10 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
         if args.save_logs:
             for name, val in metrics.items():
                 if tb_writer is not None:
-                    tb_writer.add_scalar(f"train/{name}", train, epoch)
+                    tb_writer.add_scalar(f"train_eval/{name}", val, epoch)
         if args.wandb:
             for name, val in metrics.items():
-                wandb.log({f"train/{name}": train, 'epoch': epoch})
+                wandb.log({f"train_eval/{name}": val, 'epoch': epoch})
 
     if args.save_logs:
         with open(os.path.join(args.checkpoint_path, "train_results.jsonl"), "a+") as f:
