@@ -199,6 +199,81 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         )
         loss = cumulative_loss / num_elements
         metrics.update(
+            **{"train_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
+        )
+        metrics.update(zero_shot_metrics)
+
+        logging.info(
+            f"Eval Train Epoch: {epoch} "
+            + "\t".join([f"{k}: {v:.4f}" for k, v in metrics.items()])
+        )
+
+        if args.save_logs:
+            for name, val in metrics.items():
+                if tb_writer is not None:
+                    tb_writer.add_scalar(f"train/{name}", val, epoch)
+        if args.wandb:
+            for name, val in metrics.items():
+                wandb.log({f"train/{name}": val, 'epoch': epoch})
+
+    if args.save_logs:
+        with open(os.path.join(args.checkpoint_path, "results.jsonl"), "a+") as f:
+            f.write(json.dumps(metrics))
+            f.write("\n")
+
+    return metrics
+
+
+def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
+    if not is_master(args):
+        return
+
+    model.eval()
+
+    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+
+    dataloader = data['train'].dataloader
+
+    loss_img = nn.CrossEntropyLoss()
+    loss_txt = nn.CrossEntropyLoss()
+    if args.gpu is not None:
+        loss_img = loss_img.cuda(args.gpu)
+        loss_txt = loss_txt.cuda(args.gpu)
+
+    cumulative_loss = 0.0
+    num_elements = 0.0
+    all_image_features, all_text_features = [], []
+    with torch.no_grad():
+        for batch in dataloader:
+            images, texts = batch
+            if args.gpu is not None:
+                images = images.cuda(args.gpu, non_blocking=True)
+                texts = texts.cuda(args.gpu, non_blocking=True)
+
+            image_features, text_features, logit_scale = model(images, texts)
+            all_image_features.append(image_features)
+            all_text_features.append(text_features)
+            logit_scale = logit_scale.mean()
+            logits_per_image = logit_scale * image_features @ text_features.t()
+            logits_per_text = logits_per_image.t()
+
+            ground_truth = torch.arange(len(images)).long()
+            if args.gpu is not None:
+                ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+            total_loss = (
+                                 loss_img(logits_per_image, ground_truth)
+                                 + loss_txt(logits_per_text, ground_truth)
+                         ) / 2
+
+            batch_size = len(images)
+            cumulative_loss += total_loss * batch_size
+            num_elements += batch_size
+
+        metrics = get_metrics(
+            torch.cat(all_image_features), torch.cat(all_text_features)
+        )
+        loss = cumulative_loss / num_elements
+        metrics.update(
             **{"val_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
         )
         metrics.update(zero_shot_metrics)
@@ -211,10 +286,10 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         if args.save_logs:
             for name, val in metrics.items():
                 if tb_writer is not None:
-                    tb_writer.add_scalar(f"val/{name}", val, epoch)
+                    tb_writer.add_scalar(f"val/{name}", train, epoch)
         if args.wandb:
             for name, val in metrics.items():
-                wandb.log({f"val/{name}": val, 'epoch': epoch})
+                wandb.log({f"val/{name}": train, 'epoch': epoch})
 
     if args.save_logs:
         with open(os.path.join(args.checkpoint_path, "results.jsonl"), "a+") as f:
