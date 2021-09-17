@@ -18,7 +18,7 @@ from torch.cuda.amp import GradScaler
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import _transform_default, _transform_custom, load
 from clip.model import convert_weights, CLIP
-from training.train import train, evaluate
+from training.train import train, evaluate, evaluate_train
 from training.data import get_data
 from training.params import parse_args
 from training.logger import setup_primary_logging, setup_worker_logging
@@ -209,6 +209,8 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         steps = data["train"].dataloader.num_batches * (epoch + 1)
         if args.val_data is not None:
             evaluate(model, data, epoch + 1, args, writer, steps)
+        if args.eval_train:
+            evaluate_train(model, data, epoch + 1, args, writer, steps)
 
         # Saving checkpoints.
         if args.save_logs and (args.gpu == 0 or (not args.distributed)):

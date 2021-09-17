@@ -21,12 +21,12 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-separator="," \
-  --warmup 2500 \
+  --warmup 5000 \
   --batch-size=64 \
   --lr=0.0004 \
   --wd=0.1 \
   --epochs=500 \
   --workers=4 \
   --model RN18_pretrained \
-  --default-aug \
+  --custom-aug \
   --dist-url 'tcp://localhost:10026'

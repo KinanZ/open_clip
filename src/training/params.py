@@ -163,6 +163,12 @@ def parse_args():
         help="Options are ['wandb', 'tensorboard', 'wandb,tensorboard']"
     )
     parser.add_argument(
+        "--eval-train",
+        default=False,
+        action="store_true",
+        help="an option to evaluate the train set"
+    )
+    parser.add_argument(
         "--wandb-notes",
         default='',
         type=str,
