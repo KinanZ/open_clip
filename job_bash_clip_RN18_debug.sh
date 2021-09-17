@@ -1,6 +1,6 @@
 #PBS -N clip_no_0_RN18_debug
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=1:gpus=1:nvidiaMin12GB,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=1:gpus=1:nvidiaGTX1080Ti,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/
 
@@ -22,7 +22,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-caption-key sentence \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=32 \
+  --batch-size=24 \
   --lr=0.0002 \
   --wd=0.1 \
   --epochs=2 \
