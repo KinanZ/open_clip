@@ -200,6 +200,8 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         evaluate(model, data, start_epoch, args, writer, 0)
         return
     elif start_epoch == 0 and args.val_data is not None:
+        if args.eval_train:
+            evaluate_train(model, data, 0, args, writer, 0)
         evaluate(model, data, 0, args, writer, 0)
 
     for epoch in range(start_epoch, args.epochs):
@@ -207,10 +209,11 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
             logging.info(f'Start epoch {epoch}')
         train(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         steps = data["train"].dataloader.num_batches * (epoch + 1)
-        if args.val_data is not None:
-            evaluate(model, data, epoch + 1, args, writer, steps)
         if args.eval_train:
             evaluate_train(model, data, epoch + 1, args, writer, steps)
+        if args.val_data is not None:
+            evaluate(model, data, epoch + 1, args, writer, steps)
+
 
         # Saving checkpoints.
         if args.save_logs and (args.gpu == 0 or (not args.distributed)):

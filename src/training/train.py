@@ -204,7 +204,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         metrics.update(zero_shot_metrics)
 
         logging.info(
-            f"Eval Train Epoch: {epoch} "
+            f"Eval Epoch: {epoch} "
             + "\t".join([f"{k}: {v:.4f}" for k, v in metrics.items()])
         )
 
@@ -279,7 +279,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
         metrics.update(zero_shot_metrics)
 
         logging.info(
-            f"Eval Epoch: {epoch} "
+            f"Eval Train Epoch: {epoch} "
             + "\t".join([f"{k}: {v:.4f}" for k, v in metrics.items()])
         )
 
