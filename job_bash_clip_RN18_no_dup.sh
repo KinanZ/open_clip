@@ -1,6 +1,6 @@
-#PBS -N clip_no_0_no_dup_RN18_longer
+#PBS -N clip_no_0_no_dup_RN18_longerer
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=2:gpus=2:nvidiaMin12GB,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=4:gpus=4:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/
 
@@ -13,8 +13,8 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_no_0_no_dup_RN18_longer' \
-  --save-frequency 99 \
+  --name='clip_no_0_no_dup_RN18_longerer' \
+  --save-frequency 199 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_0_no_dup.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_0_no_dup.csv"  \
@@ -25,7 +25,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=32 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=500 \
+  --epochs=1000 \
   --workers=4 \
   --model RN18 \
   --default-aug \
