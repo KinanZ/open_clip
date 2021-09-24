@@ -26,7 +26,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=36 \
   --lr=0.0003 \
   --wd=0.1 \
-  --epochs=500 \
+  --epochs=5 \
   --workers=4 \
   --model RN18 \
   --default-aug \
