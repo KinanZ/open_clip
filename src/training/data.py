@@ -50,7 +50,7 @@ class CsvDataset(Dataset):
         texts = tokenize([str(self.captions[idx])])[0]
 
         if self.labels is not None:
-            labels = eval(self.labels[idx])
+            labels = self.labels[idx]
             return images, texts, labels
         else:
             return images, texts, []
