@@ -1,8 +1,10 @@
 #PBS -N clip_no_0_wo_labels_RN18
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=4:gpus=4:nvidiaGTX1080Ti,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:gpus=1:ubuntu2004:nvidiaRTX3090,mem=15000mb,walltime=3:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/
+#PBS -q default-cpu
+#PBS -X
 
 
 homePath='/misc/student/alzouabk/miniconda3'
