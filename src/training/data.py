@@ -50,7 +50,9 @@ class CsvDataset(Dataset):
         texts = tokenize([str(self.captions[idx])])[0]
 
         if self.labels is not None:
-            labels = self.labels[idx]
+            gt_labels = self.labels[idx]
+            labels = torch.zeros(15) # 15 is the number of classes
+            labels[eval(gt_labels)] = 1
             return images, texts, labels
         else:
             return images, texts, []

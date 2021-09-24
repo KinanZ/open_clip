@@ -35,8 +35,13 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
         gathered_text_features = [
             torch.zeros_like(text_features) for _ in range(world_size)
         ]
+        gathered_labels = [
+            torch.zeros_like(labels) for _ in range(world_size)
+        ]
+
         dist.all_gather(gathered_image_features, image_features)
         dist.all_gather(gathered_text_features, text_features)
+        dist.all_gather(gathered_labels, labels)
 
         all_image_features = torch.cat(
             [image_features]
@@ -47,6 +52,11 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
             [text_features]
             + gathered_text_features[:rank]
             + gathered_text_features[rank + 1 :]
+        )
+        labels = torch.cat(
+            [labels]
+            + gathered_labels[:rank]
+            + gathered_labels[rank + 1:]
         )
 
         # this is needed to send gradients back everywhere.
@@ -59,14 +69,13 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
 
     if args.custom_loss:
         ground_truth = torch.zeros(logits_per_image.shape).float()
-        #labels = [eval(label) for label in labels]
         print('logits_per_image shape: ', logits_per_image.shape)
         print('logits_per_image len: ', len(logits_per_image))
         print('labels: ', labels)
         print('labels len: ', len(labels))
         print('ground truth: ', ground_truth.shape)
         for i in range(len(logits_per_image)):
-            mask_same = [j for j in range(len(logits_per_image)) if labels[j] == labels[i]]
+            mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
     else:
         ground_truth = torch.arange(len(logits_per_image)).long()
@@ -113,14 +122,10 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
 
         images, texts, labels = batch
 
-        if args.custom_loss:
-            labels = torch.as_tensor([eval(label) for label in labels])
-
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
             texts = texts.cuda(args.gpu, non_blocking=True)
-            if args.custom_loss:
-                labels = labels.cuda(args.gpu, non_blocking=True)
+            labels = labels.cuda(args.gpu, non_blocking=True)
 
         data_time = time.time() - end
 
