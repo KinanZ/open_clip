@@ -1,9 +1,8 @@
 #PBS -N clip_no_0_wo_labels_RN18
 #PBS -S /bin/bash
-#PBS -l nodes=1:gpus=1:ubuntu2004:nvidiaRTX3090,mem=15000mb,walltime=3:00:00
+#PBS -l nodes=1:ppn=4:gpus=4:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/
-#PBS -q default-cpu
 
 
 homePath='/misc/student/alzouabk/miniconda3'
@@ -27,7 +26,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=36 \
   --lr=0.0003 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=200 \
   --workers=4 \
   --model RN18 \
   --default-aug \
