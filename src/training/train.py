@@ -69,12 +69,13 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
 
     if args.custom_loss:
         ground_truth = torch.zeros(logits_per_image.shape).float()
-        print('ground truth: ', ground_truth)
         for i in range(len(logits_per_image)):
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
     else:
         ground_truth = torch.arange(len(logits_per_image)).long()
+    print('labels: ', labels)
+    print('ground truth: ', ground_truth)
 
     if args.gpu is not None:
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
@@ -214,13 +215,14 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
 
             if args.custom_loss:
                 ground_truth = torch.zeros(logits_per_image.shape).float()
-                print('eval_ground truth: ', ground_truth)
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
 
+            print('eval_labels: ', labels)
+            print('eval_ground truth: ', ground_truth)
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
             total_loss = (
@@ -302,12 +304,14 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
 
             if args.custom_loss:
                 ground_truth = torch.zeros(logits_per_image.shape).float()
-                print('eval_ground truth: ', ground_truth)
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
+
+            print('eval_labels: ', labels)
+            print('eval_ground truth: ', ground_truth)
 
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
