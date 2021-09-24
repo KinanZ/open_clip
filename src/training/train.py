@@ -59,7 +59,7 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
 
     if args.custom_loss:
         ground_truth = torch.zeros(logits_per_image.shape).float()
-        labels = [eval(label) for label in labels]
+        #labels = [eval(label) for label in labels]
         print('logits_per_image shape: ', logits_per_image.shape)
         print('logits_per_image len: ', len(logits_per_image))
         print('labels: ', labels)
