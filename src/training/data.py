@@ -27,12 +27,18 @@ from clip.clip import tokenize
 
 
 class CsvDataset(Dataset):
-    def __init__(self, input_filename, transforms, img_key, caption_key, sep="\t"):
+    def __init__(self, input_filename, transforms, img_key, caption_key, labels_key=None,  sep="\t"):
         logging.debug(f'Loading csv data from {input_filename}.')
         df = pd.read_csv(input_filename, sep=sep)
 
         self.images = df[img_key].tolist()
         self.captions = df[caption_key].tolist()
+
+        if labels_key is not None:
+            self.labels = df[labels_key].tolist()
+        else:
+            self.labels = None
+
         self.transforms = transforms
         logging.debug('Done loading data.')
 
@@ -42,6 +48,13 @@ class CsvDataset(Dataset):
     def __getitem__(self, idx):
         images = self.transforms(Image.open(str(self.images[idx])))
         texts = tokenize([str(self.captions[idx])])[0]
+
+        if self.labels is not None:
+            labels = self.labels[idx]
+            return images, texts, labels
+        else:
+            return images, texts, []
+
         return images, texts
 
 @dataclass
@@ -167,6 +180,7 @@ def get_csv_dataset(args, preprocess_fn, is_train):
         preprocess_fn,
         img_key=args.csv_img_key,
         caption_key=args.csv_caption_key,
+        labels_key=args.csv_label_key,
         sep=args.csv_separator)
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None

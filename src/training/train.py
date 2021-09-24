@@ -21,7 +21,7 @@ import logging
 def is_master(args):
     return (not args.distributed) or args.gpu == 0
 
-def get_loss(model, images, texts, loss_img, loss_txt, args):
+def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
     image_features, text_features, logit_scale = model(images, texts)
     logit_scale = logit_scale.mean()
     if args.distributed and args.aggregate:
@@ -57,7 +57,15 @@ def get_loss(model, images, texts, loss_img, loss_txt, args):
         logits_per_image = logit_scale * image_features @ text_features.t()
         logits_per_text = logit_scale * text_features @ image_features.t()
 
-    ground_truth = torch.arange(len(logits_per_image)).long()
+    if args.custom_loss:
+        ground_truth = torch.zeros(logits_per_image.shape).float()
+        labels = [eval(label) for label in labels]
+        for i in range(len(logits_per_image)):
+            mask_same = [j for j in range(len(logits_per_image)) if labels[j] == labels[i]]
+            ground_truth[i][mask_same] = 1
+    else:
+        ground_truth = torch.arange(len(logits_per_image)).long()
+
     if args.gpu is not None:
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
 
@@ -75,8 +83,13 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
 
     dataloader, sampler = data['train'].dataloader,  data['train'].sampler
 
-    loss_img = nn.CrossEntropyLoss()
-    loss_txt = nn.CrossEntropyLoss()
+    if args.custom_loss:
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
+    else:
+        loss_img = nn.CrossEntropyLoss()
+        loss_txt = nn.CrossEntropyLoss()
+
     if args.gpu is not None:
         loss_img = loss_img.cuda(args.gpu)
         loss_txt = loss_txt.cuda(args.gpu)
@@ -93,10 +106,11 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
 
         optimizer.zero_grad()
 
-        images, texts = batch
+        images, texts, labels = batch
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
             texts = texts.cuda(args.gpu, non_blocking=True)
+            labels = labels.cuda(args.gpu, non_blocking=True)
 
         data_time = time.time() - end
 
@@ -105,13 +119,13 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
         # with automatic mixed precision.
         if args.precision == "amp":
             with autocast():
-                total_loss = get_loss(model, images, texts, loss_img, loss_txt, args)
+                total_loss = get_loss(model, images, texts, labels, loss_img, loss_txt, args)
                 scaler.scale(total_loss).backward()
                 scaler.step(optimizer)
             scaler.update()
 
         else:
-            total_loss = get_loss(model, images, texts, loss_img, loss_txt, args)
+            total_loss = get_loss(model, images, texts, labels, loss_img, loss_txt, args)
             total_loss.backward()
             optimizer.step()
 
@@ -159,8 +173,13 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
 
     dataloader = data['val'].dataloader
 
-    loss_img = nn.CrossEntropyLoss()
-    loss_txt = nn.CrossEntropyLoss()
+    if args.custom_loss:
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
+    else:
+        loss_img = nn.CrossEntropyLoss()
+        loss_txt = nn.CrossEntropyLoss()
+
     if args.gpu is not None:
         loss_img = loss_img.cuda(args.gpu)
         loss_txt = loss_txt.cuda(args.gpu)
@@ -170,10 +189,11 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
     all_image_features, all_text_features = [], []
     with torch.no_grad():
         for batch in dataloader:
-            images, texts = batch
+            images, texts, labels = batch
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
                 texts = texts.cuda(args.gpu, non_blocking=True)
+                labels = labels.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
             all_image_features.append(image_features)
@@ -182,7 +202,15 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
 
-            ground_truth = torch.arange(len(images)).long()
+            if args.custom_loss:
+                ground_truth = torch.zeros(logits_per_image.shape).float()
+                labels = [eval(label) for label in labels]
+                for i in range(len(logits_per_image)):
+                    mask_same = [j for j in range(len(logits_per_image)) if labels[j] == labels[i]]
+                    ground_truth[i][mask_same] = 1
+            else:
+                ground_truth = torch.arange(len(images)).long()
+
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
             total_loss = (
@@ -234,8 +262,13 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
 
     dataloader = data['train'].dataloader
 
-    loss_img = nn.CrossEntropyLoss()
-    loss_txt = nn.CrossEntropyLoss()
+    if args.custom_loss:
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
+    else:
+        loss_img = nn.CrossEntropyLoss()
+        loss_txt = nn.CrossEntropyLoss()
+
     if args.gpu is not None:
         loss_img = loss_img.cuda(args.gpu)
         loss_txt = loss_txt.cuda(args.gpu)
@@ -245,10 +278,11 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
     all_image_features, all_text_features = [], []
     with torch.no_grad():
         for batch in dataloader:
-            images, texts = batch
+            images, texts, labels = batch
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
                 texts = texts.cuda(args.gpu, non_blocking=True)
+                labels = labels.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
             all_image_features.append(image_features)
@@ -257,7 +291,15 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
 
-            ground_truth = torch.arange(len(images)).long()
+            if args.custom_loss:
+                ground_truth = torch.zeros(logits_per_image.shape).float()
+                labels = [eval(label) for label in labels]
+                for i in range(len(logits_per_image)):
+                    mask_same = [j for j in range(len(logits_per_image)) if labels[j] == labels[i]]
+                    ground_truth[i][mask_same] = 1
+            else:
+                ground_truth = torch.arange(len(images)).long()
+
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
             total_loss = (

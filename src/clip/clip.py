@@ -156,11 +156,11 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
             model.float()
 
         if custom_aug:
-            transform_train = _transform_custom(512, is_train=True)
-            transform_val = _transform_custom(512, is_train=False)
+            transform_train = _transform_custom(model.visual.input_resolution, is_train=True)
+            transform_val = _transform_custom(model.visual.input_resolution, is_train=False)
         else:
-            transform_train = _transform_default(512, is_train=True)
-            transform_val = _transform_default(512, is_train=False)
+            transform_train = _transform_default(model.visual.input_resolution, is_train=True)
+            transform_val = _transform_default(model.visual.input_resolution, is_train=False)
 
         return model, \
                transform_train, \

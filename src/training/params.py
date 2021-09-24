@@ -214,6 +214,18 @@ def parse_args():
         action="store_true",
         help="Whether to use our custom transforms"
     )
+    parser.add_argument(
+        "--csv-label-key",
+        type=str,
+        default="labels",
+        help="For csv-like datasets, the name of the key for the labels."
+    )
+    parser.add_argument(
+        "--custom-loss",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function"
+    )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
 
