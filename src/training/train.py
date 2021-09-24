@@ -74,8 +74,6 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
             ground_truth[i][mask_same] = 1
     else:
         ground_truth = torch.arange(len(logits_per_image)).long()
-    print('labels: ', labels)
-    print('ground truth: ', ground_truth)
 
     if args.gpu is not None:
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
@@ -221,8 +219,6 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
 
-            print('eval_labels: ', labels)
-            print('eval_ground truth: ', ground_truth)
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
             total_loss = (
@@ -309,9 +305,6 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                     ground_truth[i][mask_same] = 1
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
-
-            print('eval_labels: ', labels)
-            print('eval_ground truth: ', ground_truth)
 
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)

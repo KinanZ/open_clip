@@ -23,10 +23,10 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=4 \
+  --batch-size=36 \
   --lr=0.0003 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=200 \
   --workers=4 \
   --model RN18 \
   --default-aug \
