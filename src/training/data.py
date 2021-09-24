@@ -50,10 +50,10 @@ class CsvDataset(Dataset):
         texts = tokenize([str(self.captions[idx])])[0]
 
         if self.labels is not None:
-            labels = torch.tensor(eval(self.labels[idx]))
+            labels = eval(self.labels[idx])
             return images, texts, labels
         else:
-            return images, texts, torch.tensor([])
+            return images, texts, []
 
 @dataclass
 class DataInfo:

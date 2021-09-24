@@ -112,9 +112,15 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
         optimizer.zero_grad()
 
         images, texts, labels = batch
+
+        if args.custom_loss:
+            labels = torch.as_tensor([eval(label) for label in labels])
+
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
             texts = texts.cuda(args.gpu, non_blocking=True)
+            if args.custom_loss:
+                labels = labels.cuda(args.gpu, non_blocking=True)
 
         data_time = time.time() - end
 
