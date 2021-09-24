@@ -60,8 +60,11 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
     if args.custom_loss:
         ground_truth = torch.zeros(logits_per_image.shape).float()
         labels = [eval(label) for label in labels]
-        print(logits_per_image.shape)
-        print(len(logits_per_image))
+        print('logits_per_image shape: ', logits_per_image.shape)
+        print('logits_per_image len: ', len(logits_per_image))
+        print('labels: ', labels)
+        print('labels len: ', len(labels))
+        print('ground truth: ', ground_truth.shape)
         for i in range(len(logits_per_image)):
             mask_same = [j for j in range(len(logits_per_image)) if labels[j] == labels[i]]
             ground_truth[i][mask_same] = 1
