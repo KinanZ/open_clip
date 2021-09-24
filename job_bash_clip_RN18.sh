@@ -4,7 +4,6 @@
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/
 #PBS -q default-cpu
-#PBS -X
 
 
 homePath='/misc/student/alzouabk/miniconda3'
@@ -28,7 +27,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=36 \
   --lr=0.0003 \
   --wd=0.1 \
-  --epochs=200 \
+  --epochs=2 \
   --workers=4 \
   --model RN18 \
   --default-aug \
