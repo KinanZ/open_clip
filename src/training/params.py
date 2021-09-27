@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument(
         "--logs",
         type=str,
-        default="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_3/",
+        default="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/",
         help="Where to store tensorboard logs. Use None to avoid storing logs.",
     )
     parser.add_argument(
