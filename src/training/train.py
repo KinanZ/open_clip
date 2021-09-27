@@ -78,8 +78,8 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
         for i in range(len(logits_per_image)):
             if labels[i][0] == 1:
                 loss_weights[i] = 0
-        loss_img = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
-        loss_txt = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
+        loss_img = nn.CrossEntropyLoss(weight=loss_weights)
+        loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
     else:
         ground_truth = torch.arange(len(logits_per_image)).long()
 
