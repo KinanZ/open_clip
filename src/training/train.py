@@ -21,7 +21,7 @@ import logging
 def is_master(args):
     return (not args.distributed) or args.gpu == 0
 
-def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
+def get_loss(model, images, texts, labels, args):
     image_features, text_features, logit_scale = model(images, texts)
     logit_scale = logit_scale.mean()
     if args.distributed and args.aggregate:
@@ -72,20 +72,27 @@ def get_loss(model, images, texts, labels, loss_img, loss_txt, args):
         for i in range(len(logits_per_image)):
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
     elif args.custom_loss_2:
         ground_truth = torch.arange(len(logits_per_image)).long()
         loss_weights = torch.ones([len(logits_per_image)])
         for i in range(len(logits_per_image)):
             if labels[i][0] == 1:
                 loss_weights[i] = 0
-        loss_weights = loss_weights.cuda(args.gpu, non_blocking=True)
-        loss_img = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
-        loss_txt = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
+        loss_img = nn.CrossEntropyLoss(weight=loss_weights)
+        loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
     else:
         ground_truth = torch.arange(len(logits_per_image)).long()
+        loss_img = nn.CrossEntropyLoss()
+        loss_txt = nn.CrossEntropyLoss()
 
     if args.gpu is not None:
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+        loss_img = loss_img.cuda(args.gpu)
+        loss_txt = loss_txt.cuda(args.gpu)
+        if args.custom_loss_2:
+            loss_weights = loss_weights.cuda(args.gpu, non_blocking=True)
 
     total_loss = (
         loss_img(logits_per_image, ground_truth)
@@ -100,17 +107,6 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
     model.train()
 
     dataloader, sampler = data['train'].dataloader,  data['train'].sampler
-
-    if args.custom_loss_1:
-        loss_img = nn.BCEWithLogitsLoss()
-        loss_txt = nn.BCEWithLogitsLoss()
-    else:
-        loss_img = nn.CrossEntropyLoss()
-        loss_txt = nn.CrossEntropyLoss()
-
-    if args.gpu is not None:
-        loss_img = loss_img.cuda(args.gpu)
-        loss_txt = loss_txt.cuda(args.gpu)
 
     if args.distributed and sampler is not None:
         sampler.set_epoch(epoch)
@@ -138,13 +134,13 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
         # with automatic mixed precision.
         if args.precision == "amp":
             with autocast():
-                total_loss = get_loss(model, images, texts, labels, loss_img, loss_txt, args)
+                total_loss = get_loss(model, images, texts, labels, args)
                 scaler.scale(total_loss).backward()
                 scaler.step(optimizer)
             scaler.update()
 
         else:
-            total_loss = get_loss(model, images, texts, labels, loss_img, loss_txt, args)
+            total_loss = get_loss(model, images, texts, labels, args)
             total_loss.backward()
             optimizer.step()
 
@@ -192,17 +188,6 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
 
     dataloader = data['val'].dataloader
 
-    if args.custom_loss_1:
-        loss_img = nn.BCEWithLogitsLoss()
-        loss_txt = nn.BCEWithLogitsLoss()
-    else:
-        loss_img = nn.CrossEntropyLoss()
-        loss_txt = nn.CrossEntropyLoss()
-
-    if args.gpu is not None:
-        loss_img = loss_img.cuda(args.gpu)
-        loss_txt = loss_txt.cuda(args.gpu)
-
     cumulative_loss = 0.0
     num_elements = 0.0
     all_image_features, all_text_features = [], []
@@ -225,19 +210,26 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
             elif args.custom_loss_2:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_weights = torch.ones([len(logits_per_image)])
                 for i in range(len(logits_per_image)):
                     if labels[i][0] == 1:
                         loss_weights[i] = 0
-                loss_img = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
-                loss_txt = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
+                loss_img = nn.CrossEntropyLoss(weight=loss_weights)
+                loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
+                loss_img = nn.CrossEntropyLoss()
+                loss_txt = nn.CrossEntropyLoss()
 
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+                loss_img = loss_img.cuda(args.gpu)
+                loss_txt = loss_txt.cuda(args.gpu)
+
             total_loss = (
                 loss_img(logits_per_image, ground_truth)
                 + loss_txt(logits_per_text, ground_truth)
@@ -287,17 +279,6 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
 
     dataloader = data['train'].dataloader
 
-    if args.custom_loss_1:
-        loss_img = nn.BCEWithLogitsLoss()
-        loss_txt = nn.BCEWithLogitsLoss()
-    else:
-        loss_img = nn.CrossEntropyLoss()
-        loss_txt = nn.CrossEntropyLoss()
-
-    if args.gpu is not None:
-        loss_img = loss_img.cuda(args.gpu)
-        loss_txt = loss_txt.cuda(args.gpu)
-
     cumulative_loss = 0.0
     num_elements = 0.0
     all_image_features, all_text_features = [], []
@@ -320,19 +301,26 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
             elif args.custom_loss_2:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_weights = torch.ones([len(logits_per_image)])
                 for i in range(len(logits_per_image)):
                     if labels[i][0] == 1:
                         loss_weights[i] = 0
-                loss_img = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
-                loss_txt = nn.CrossEntropyLoss(weight=loss_weights).cuda(args.gpu)
+                loss_img = nn.CrossEntropyLoss(weight=loss_weights)
+                loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
+                loss_img = nn.CrossEntropyLoss()
+                loss_txt = nn.CrossEntropyLoss()
 
             if args.gpu is not None:
                 ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+                loss_img = loss_img.cuda(args.gpu)
+                loss_txt = loss_txt.cuda(args.gpu)
+
             total_loss = (
                                  loss_img(logits_per_image, ground_truth)
                                  + loss_txt(logits_per_text, ground_truth)
