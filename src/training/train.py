@@ -67,22 +67,22 @@ def get_loss(model, images, texts, labels, args):
         logits_per_image = logit_scale * image_features @ text_features.t()
         logits_per_text = logit_scale * text_features @ image_features.t()
 
-    if args.custom_loss_1:
-        ground_truth = torch.zeros(logits_per_image.shape).float()
-        for i in range(len(logits_per_image)):
+    if args.custom_loss_1:  # The approach where we pull the samples from each class together
+        ground_truth = torch.zeros(logits_per_image.shape).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
         loss_img = nn.BCEWithLogitsLoss()
         loss_txt = nn.BCEWithLogitsLoss()
-    elif args.custom_loss_2:
-        ground_truth = torch.arange(len(logits_per_image)).long()
-        loss_weights = torch.ones([len(logits_per_image)])
-        for i in range(len(logits_per_image)):
+    elif args.custom_loss_2:  # The approach where we ignore the difference between the samples from the healthy class
+        ground_truth = torch.arange(len(logits_per_image)).long()  # ground_truth.shape = 1 x batchsize
+        loss_weights = torch.ones([len(logits_per_image)])  # loss_weights.shape = 1 x batchsize
+        for i in range(len(logits_per_image)):  # zero out the weight for a sample if it belongs to the healthy class
             if labels[i][0] == 1:
                 loss_weights[i] = 0
         loss_img = nn.CrossEntropyLoss(weight=loss_weights)
         loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
-    else:
+    else: # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
         loss_img = nn.CrossEntropyLoss()
         loss_txt = nn.CrossEntropyLoss()
