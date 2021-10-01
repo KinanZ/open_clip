@@ -31,5 +31,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --model RN18 \
   --default-aug \
   --eval-train \
-  --custom-loss_2 \
+  --custom-loss_3 \
   --dist-url 'tcp://localhost:10056'
