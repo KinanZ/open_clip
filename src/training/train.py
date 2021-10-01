@@ -82,6 +82,14 @@ def get_loss(model, images, texts, labels, args):
                 loss_weights[i] = 0
         loss_img = nn.CrossEntropyLoss(weight=loss_weights)
         loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
+    elif args.custom_loss_3:
+        ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+            if labels[i][0] == 1:
+                mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                ground_truth[i][mask_same] = 1
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
     else: # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
         loss_img = nn.CrossEntropyLoss()
@@ -91,8 +99,6 @@ def get_loss(model, images, texts, labels, args):
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
         loss_img = loss_img.cuda(args.gpu)
         loss_txt = loss_txt.cuda(args.gpu)
-        if args.custom_loss_2:
-            loss_weights = loss_weights.cuda(args.gpu, non_blocking=True)
 
     total_loss = (
         loss_img(logits_per_image, ground_truth)

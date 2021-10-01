@@ -230,7 +230,13 @@ def parse_args():
         "--custom-loss_2",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 1"
+        help="Whether to use our custom loss function num 2"
+    )
+    parser.add_argument(
+        "--custom-loss_3",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 3"
     )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
