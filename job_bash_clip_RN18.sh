@@ -1,6 +1,6 @@
 #PBS -N clip_RN18_custom_loss_3_old_eval
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=4:gpus=4:nvidiaMin12GB,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=4:gpus=4:ubuntu2004:nvidiaMin12GB,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
