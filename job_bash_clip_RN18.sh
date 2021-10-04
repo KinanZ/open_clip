@@ -23,7 +23,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=46 \
+  --batch-size=36 \
   --lr=0.0002 \
   --wd=0.1 \
   --epochs=400 \
@@ -31,5 +31,4 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --model RN18 \
   --default-aug \
   --eval-train \
-  --precision fp16 \
   --dist-url 'tcp://localhost:10026'
