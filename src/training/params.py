@@ -238,6 +238,12 @@ def parse_args():
         action="store_true",
         help="Whether to use our custom loss function num 3"
     )
+    parser.add_argument(
+        "--custom-eval",
+        default=False,
+        action="store_true",
+        help="Updated evaluations"
+    )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
 

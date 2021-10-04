@@ -18,8 +18,10 @@ import wandb
 
 import logging
 
+
 def is_master(args):
     return (not args.distributed) or args.gpu == 0
+
 
 def get_loss(model, images, texts, labels, args):
     image_features, text_features, logit_scale = model(images, texts)
@@ -46,12 +48,12 @@ def get_loss(model, images, texts, labels, args):
         all_image_features = torch.cat(
             [image_features]
             + gathered_image_features[:rank]
-            + gathered_image_features[rank + 1 :]
+            + gathered_image_features[rank + 1:]
         )
         all_text_features = torch.cat(
             [text_features]
             + gathered_text_features[:rank]
-            + gathered_text_features[rank + 1 :]
+            + gathered_text_features[rank + 1:]
         )
         labels = torch.cat(
             [labels]
@@ -68,8 +70,10 @@ def get_loss(model, images, texts, labels, args):
         logits_per_text = logit_scale * text_features @ image_features.t()
 
     if args.custom_loss_1:  # The approach where we pull the samples from each class together
-        ground_truth = torch.zeros(logits_per_image.shape).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class
+        ground_truth = torch.zeros(
+            logits_per_image.shape).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(
+                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
         loss_img = nn.BCEWithLogitsLoss()
@@ -83,14 +87,16 @@ def get_loss(model, images, texts, labels, args):
         loss_img = nn.CrossEntropyLoss(weight=loss_weights)
         loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
     elif args.custom_loss_3:
-        ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+        ground_truth = torch.eye(
+            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(
+                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
             if labels[i][0] == 1:
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                 ground_truth[i][mask_same] = 1
         loss_img = nn.BCEWithLogitsLoss()
         loss_txt = nn.BCEWithLogitsLoss()
-    else: # Default Clip loss
+    else:  # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
         loss_img = nn.CrossEntropyLoss()
         loss_txt = nn.CrossEntropyLoss()
@@ -101,18 +107,18 @@ def get_loss(model, images, texts, labels, args):
         loss_txt = loss_txt.cuda(args.gpu)
 
     total_loss = (
-        loss_img(logits_per_image, ground_truth)
-        + loss_txt(logits_per_text, ground_truth)
-    ) / 2
+                         loss_img(logits_per_image, ground_truth)
+                         + loss_txt(logits_per_text, ground_truth)
+                 ) / 2
     return total_loss
 
 
 def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None):
     os.environ["WDS_EPOCH"] = str(epoch)
-    
+
     model.train()
 
-    dataloader, sampler = data['train'].dataloader,  data['train'].sampler
+    dataloader, sampler = data['train'].dataloader, data['train'].sampler
 
     if args.distributed and sampler is not None:
         sampler.set_epoch(epoch)
@@ -172,7 +178,7 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
                 "loss": total_loss.item(),
                 "data_time": data_time,
                 "batch_time": batch_time,
-                "scale":  m.logit_scale.data.item(),
+                "scale": m.logit_scale.data.item(),
                 "lr": optimizer.param_groups[0]["lr"]
             }
 
@@ -187,7 +193,7 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
 def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
     if not is_master(args):
         return
-    
+
     model.eval()
 
     zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
@@ -196,7 +202,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
 
     cumulative_loss = 0.0
     num_elements = 0.0
-    all_image_features, all_text_features = [], []
+    all_image_features, all_text_features, all_labels, all_texts = [], [], [], []
     with torch.no_grad():
         for batch in dataloader:
             images, texts, labels = batch
@@ -207,105 +213,8 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             image_features, text_features, logit_scale = model(images, texts)
             all_image_features.append(image_features)
             all_text_features.append(text_features)
-            logit_scale = logit_scale.mean()
-            logits_per_image = logit_scale * image_features @ text_features.t()
-            logits_per_text = logits_per_image.t()
-
-            if args.custom_loss_1:
-                ground_truth = torch.zeros(logits_per_image.shape).float()
-                for i in range(len(logits_per_image)):
-                    mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
-                    ground_truth[i][mask_same] = 1
-                loss_img = nn.BCEWithLogitsLoss()
-                loss_txt = nn.BCEWithLogitsLoss()
-            elif args.custom_loss_2:
-                ground_truth = torch.arange(len(logits_per_image)).long()
-                loss_weights = torch.ones([len(logits_per_image)])
-                for i in range(len(logits_per_image)):
-                    if labels[i][0] == 1:
-                        loss_weights[i] = 0
-                loss_img = nn.CrossEntropyLoss(weight=loss_weights)
-                loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
-            elif args.custom_loss_3:
-                ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
-                    if labels[i][0] == 1:
-                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
-                        ground_truth[i][mask_same] = 1
-                loss_img = nn.BCEWithLogitsLoss()
-                loss_txt = nn.BCEWithLogitsLoss()
-            else:
-                ground_truth = torch.arange(len(logits_per_image)).long()
-                loss_img = nn.CrossEntropyLoss()
-                loss_txt = nn.CrossEntropyLoss()
-
-            if args.gpu is not None:
-                ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
-                loss_img = loss_img.cuda(args.gpu)
-                loss_txt = loss_txt.cuda(args.gpu)
-
-            total_loss = (
-                loss_img(logits_per_image, ground_truth)
-                + loss_txt(logits_per_text, ground_truth)
-            ) / 2
-
-            batch_size = len(images)
-            cumulative_loss += total_loss * batch_size
-            num_elements += batch_size
-
-        metrics = get_metrics(
-            torch.cat(all_image_features), torch.cat(all_text_features)
-        )
-        loss = cumulative_loss / num_elements
-        metrics.update(
-            **{"val_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
-        )
-        metrics.update(zero_shot_metrics)
-
-        logging.info(
-            f"Eval Epoch: {epoch} "
-            + "\t".join([f"{k}: {v:.4f}" for k, v in metrics.items()])
-        )
-
-        if args.save_logs:
-            for name, val in metrics.items():
-                if tb_writer is not None:
-                    tb_writer.add_scalar(f"val/{name}", val, epoch)
-        if args.wandb:
-            for name, val in metrics.items():
-                wandb.log({f"val/{name}": val, 'epoch': epoch})
-
-    if args.save_logs:
-        with open(os.path.join(args.checkpoint_path, "results.jsonl"), "a+") as f:
-            f.write(json.dumps(metrics))
-            f.write("\n")
-
-    return metrics
-
-
-def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
-    if not is_master(args):
-        return
-
-    model.eval()
-
-    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
-
-    dataloader = data['train'].dataloader
-
-    cumulative_loss = 0.0
-    num_elements = 0.0
-    all_image_features, all_text_features = [], []
-    with torch.no_grad():
-        for batch in dataloader:
-            images, texts, labels = batch
-            if args.gpu is not None:
-                images = images.cuda(args.gpu, non_blocking=True)
-                texts = texts.cuda(args.gpu, non_blocking=True)
-
-            image_features, text_features, logit_scale = model(images, texts)
-            all_image_features.append(image_features)
-            all_text_features.append(text_features)
+            all_labels.append(labels)
+            all_texts.append(texts)
             logit_scale = logit_scale.mean()
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
@@ -354,9 +263,118 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
             cumulative_loss += total_loss * batch_size
             num_elements += batch_size
 
-        metrics = get_metrics(
-            torch.cat(all_image_features), torch.cat(all_text_features)
+        if args.custom_eval:
+            metrics = get_metrics_custom(torch.cat(all_image_features),
+                                        torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
+        else:
+            metrics = get_metrics(torch.cat(all_image_features), torch.cat(all_text_features))
+
+        loss = cumulative_loss / num_elements
+        metrics.update(
+            **{"val_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
         )
+        metrics.update(zero_shot_metrics)
+
+        logging.info(
+            f"Eval Epoch: {epoch} "
+            + "\t".join([f"{k}: {v:.4f}" for k, v in metrics.items()])
+        )
+
+        if args.save_logs:
+            for name, val in metrics.items():
+                if tb_writer is not None:
+                    tb_writer.add_scalar(f"val/{name}", val, epoch)
+        if args.wandb:
+            for name, val in metrics.items():
+                wandb.log({f"val/{name}": val, 'epoch': epoch})
+
+    if args.save_logs:
+        with open(os.path.join(args.checkpoint_path, "results.jsonl"), "a+") as f:
+            f.write(json.dumps(metrics))
+            f.write("\n")
+
+    return metrics
+
+
+def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
+    if not is_master(args):
+        return
+
+    model.eval()
+
+    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+
+    dataloader = data['train'].dataloader
+
+    cumulative_loss = 0.0
+    num_elements = 0.0
+    all_image_features, all_text_features, all_labels, all_texts = [], [], [], []
+    with torch.no_grad():
+        for batch in dataloader:
+            images, texts, labels = batch
+            if args.gpu is not None:
+                images = images.cuda(args.gpu, non_blocking=True)
+                texts = texts.cuda(args.gpu, non_blocking=True)
+
+            image_features, text_features, logit_scale = model(images, texts)
+            all_image_features.append(image_features)
+            all_text_features.append(text_features)
+            all_labels.append(labels)
+            all_texts.append(texts)
+            logit_scale = logit_scale.mean()
+            logits_per_image = logit_scale * image_features @ text_features.t()
+            logits_per_text = logits_per_image.t()
+
+            if args.custom_loss_1:
+                ground_truth = torch.zeros(logits_per_image.shape).float()
+                for i in range(len(logits_per_image)):
+                    mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                    ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
+            elif args.custom_loss_2:
+                ground_truth = torch.arange(len(logits_per_image)).long()
+                loss_weights = torch.ones([len(logits_per_image)])
+                for i in range(len(logits_per_image)):
+                    if labels[i][0] == 1:
+                        loss_weights[i] = 0
+                loss_img = nn.CrossEntropyLoss(weight=loss_weights)
+                loss_txt = nn.CrossEntropyLoss(weight=loss_weights)
+            elif args.custom_loss_3:
+                ground_truth = torch.eye(
+                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(
+                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+                    if labels[i][0] == 1:
+                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                        ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
+            else:
+                ground_truth = torch.arange(len(logits_per_image)).long()
+                loss_img = nn.CrossEntropyLoss()
+                loss_txt = nn.CrossEntropyLoss()
+
+            if args.gpu is not None:
+                ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+                loss_img = loss_img.cuda(args.gpu)
+                loss_txt = loss_txt.cuda(args.gpu)
+
+            total_loss = (
+                                 loss_img(logits_per_image, ground_truth)
+                                 + loss_txt(logits_per_text, ground_truth)
+                         ) / 2
+
+            batch_size = len(images)
+            cumulative_loss += total_loss * batch_size
+            num_elements += batch_size
+
+        if args.custom_eval:
+            metrics = get_metrics_custom(torch.cat(all_image_features),
+                                         torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
+        else:
+            metrics = get_metrics(torch.cat(all_image_features), torch.cat(all_text_features))
+
         loss = cumulative_loss / num_elements
         metrics.update(
             **{"train_loss": loss.item(), "epoch": epoch, "num_elements": num_elements}
@@ -397,6 +415,42 @@ def get_metrics(image_features, text_features):
     for name, logit in logits.items():
         ranking = torch.argsort(logit, descending=True)
         preds = torch.where(ranking == ground_truth)[1]
+        preds = preds.detach().cpu().numpy()
+        metrics[f"{name}_mean_rank"] = preds.mean() + 1
+        metrics[f"{name}_median_rank"] = np.floor(np.median(preds)) + 1
+        for k in [1, 5, 10]:
+            metrics[f"{name}_R@{k}"] = np.mean(preds < k)
+
+    return metrics
+
+
+def get_metrics_custom(image_features, text_features, labels, texts):
+    metrics = {}
+    logits_per_image = image_features @ text_features.t()
+    logits_per_text = logits_per_image.t()
+
+    logits = {"image_to_text": logits_per_image, "text_to_image": logits_per_text}
+    ground_truth = torch.eye(
+        len(logits_per_text)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+    for i in range(
+            len(logits_per_text)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+        if labels[i][0] == 1:
+            mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+            ground_truth[i][mask_same] = 1
+        else:
+            mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
+            ground_truth[i][mask_same] = 1
+
+    for name, logit in logits.items():
+        ranking = torch.argsort(logit, descending=True)
+        preds = torch.zeros(len(logits_per_text))
+        for j in range(len(logits_per_text)):
+            if torch.sum(ground_truth[j]) == 1:
+                preds[j] = torch.where(ranking[j] == j)[0]
+            else:
+                ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1)
+                preds[j] = torch.min(torch.where(ranking[j] == ground_truth_sample)[1])
+
         preds = preds.detach().cpu().numpy()
         metrics[f"{name}_mean_rank"] = preds.mean() + 1
         metrics[f"{name}_median_rank"] = np.floor(np.median(preds)) + 1
