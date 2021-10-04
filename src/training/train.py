@@ -431,7 +431,7 @@ def get_metrics_custom(image_features, text_features, labels, texts):
 
     logits = {"image_to_text": logits_per_image, "text_to_image": logits_per_text}
     ground_truth = torch.eye(
-        len(logits_per_text)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        len(logits_per_text)).float().to(logits_per_image.device)  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
     for i in range(
             len(logits_per_text)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
         if labels[i][0] == 1:
@@ -442,13 +442,13 @@ def get_metrics_custom(image_features, text_features, labels, texts):
             ground_truth[i][mask_same] = 1
 
     for name, logit in logits.items():
-        ranking = torch.argsort(logit, descending=True)
-        preds = torch.zeros(len(logits_per_text))
+        ranking = torch.argsort(logit, descending=True).to(logits_per_image.device)
+        preds = torch.zeros(len(logits_per_text)).to(logits_per_image.device)
         for j in range(len(logits_per_text)):
             if torch.sum(ground_truth[j]) == 1:
                 preds[j] = torch.where(ranking[j] == j)[0]
             else:
-                ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1)
+                ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1).to(logits_per_image.device)
                 preds[j] = torch.min(torch.where(ranking[j] == ground_truth_sample)[1])
 
         preds = preds.detach().cpu().numpy()
