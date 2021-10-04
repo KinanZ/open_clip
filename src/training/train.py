@@ -449,7 +449,6 @@ def get_metrics_custom(image_features, text_features, labels, texts):
                 preds[j] = torch.where(ranking[j] == j)[0]
             else:
                 ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1)
-                ground_truth_sample = ground_truth_sample.detach().cpu().numpy()
                 preds[j] = torch.min(torch.where(ranking[j] == ground_truth_sample)[1])
 
         preds = preds.detach().cpu().numpy()
