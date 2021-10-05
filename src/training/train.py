@@ -277,6 +277,8 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                     else:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                         ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_img = nn.CrossEntropyLoss()
@@ -394,6 +396,8 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                     else:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                         ground_truth[i][mask_same] = 1
+                loss_img = nn.BCEWithLogitsLoss()
+                loss_txt = nn.BCEWithLogitsLoss()
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_img = nn.CrossEntropyLoss()
