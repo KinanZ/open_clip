@@ -40,10 +40,14 @@ def get_loss(model, images, texts, labels, args):
         gathered_labels = [
             torch.zeros_like(labels) for _ in range(world_size)
         ]
+        gathered_texts = [
+            torch.zeros_like(texts) for _ in range(world_size)
+        ]
 
         dist.all_gather(gathered_image_features, image_features)
         dist.all_gather(gathered_text_features, text_features)
         dist.all_gather(gathered_labels, labels)
+        dist.all_gather(gathered_texts, texts)
 
         all_image_features = torch.cat(
             [image_features]
@@ -59,6 +63,11 @@ def get_loss(model, images, texts, labels, args):
             [labels]
             + gathered_labels[:rank]
             + gathered_labels[rank + 1:]
+        )
+        texts = torch.cat(
+            [texts]
+            + gathered_texts[:rank]
+            + gathered_texts[rank + 1:]
         )
 
         # this is needed to send gradients back everywhere.
@@ -93,6 +102,19 @@ def get_loss(model, images, texts, labels, args):
                 len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
             if labels[i][0] == 1:
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                ground_truth[i][mask_same] = 1
+        loss_img = nn.BCEWithLogitsLoss()
+        loss_txt = nn.BCEWithLogitsLoss()
+    elif args.custom_loss_4:
+        ground_truth = torch.eye(
+            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(
+                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+            if labels[i][0] == 1:
+                mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                ground_truth[i][mask_same] = 1
+            else:
+                mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                 ground_truth[i][mask_same] = 1
         loss_img = nn.BCEWithLogitsLoss()
         loss_txt = nn.BCEWithLogitsLoss()
@@ -244,6 +266,17 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                         ground_truth[i][mask_same] = 1
                 loss_img = nn.BCEWithLogitsLoss()
                 loss_txt = nn.BCEWithLogitsLoss()
+            elif args.custom_loss_4:
+                ground_truth = torch.eye(
+                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(
+                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+                    if labels[i][0] == 1:
+                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                        ground_truth[i][mask_same] = 1
+                    else:
+                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
+                        ground_truth[i][mask_same] = 1
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_img = nn.CrossEntropyLoss()
@@ -350,6 +383,17 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                         ground_truth[i][mask_same] = 1
                 loss_img = nn.BCEWithLogitsLoss()
                 loss_txt = nn.BCEWithLogitsLoss()
+            elif args.custom_loss_4:
+                ground_truth = torch.eye(
+                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(
+                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+                    if labels[i][0] == 1:
+                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                        ground_truth[i][mask_same] = 1
+                    else:
+                        mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
+                        ground_truth[i][mask_same] = 1
             else:
                 ground_truth = torch.arange(len(logits_per_image)).long()
                 loss_img = nn.CrossEntropyLoss()
