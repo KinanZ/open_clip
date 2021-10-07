@@ -221,16 +221,16 @@ def parse_args():
         help="For csv-like datasets, the name of the key for the labels."
     )
     parser.add_argument(
+        "--default-loss",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 2"
+    )
+    parser.add_argument(
         "--custom-loss-1",
         default=False,
         action="store_true",
         help="Whether to use our custom loss function num 1"
-    )
-    parser.add_argument(
-        "--custom-loss-2",
-        default=False,
-        action="store_true",
-        help="Whether to use our custom loss function num 2"
     )
     parser.add_argument(
         "--custom-loss-3",
@@ -240,6 +240,12 @@ def parse_args():
     )
     parser.add_argument(
         "--custom-loss-4",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 4"
+    )
+    parser.add_argument(
+        "--custom-loss-5",
         default=False,
         action="store_true",
         help="Whether to use our custom loss function num 4"
