@@ -29,7 +29,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=300 \
   --workers=4 \
   --model RN18 \
-  --custom-loss-5 \
+  --custom-loss-3 \
   --custom-aug \
   --eval-train \
   --custom-eval \
