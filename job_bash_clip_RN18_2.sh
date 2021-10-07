@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_custom_loss_4_new_eval
+#PBS -N clip_RN18_custom_loss_3_bns
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaP100,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_custom_loss_4_new_eval' \
+  --name='clip_RN18_custom_loss_3_bns' \
   --save-frequency 199 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
@@ -29,8 +29,9 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=300 \
   --workers=4 \
   --model RN18 \
-  --custom-loss-4 \
+  --custom-loss-3 \
   --default-aug \
   --eval-train \
   --custom-eval \
+  --use-bn-sync \
   --dist-url 'tcp://localhost:10018'
