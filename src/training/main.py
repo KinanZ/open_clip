@@ -38,6 +38,7 @@ def is_master(args):
 
 
 def main_worker(gpu, ngpus_per_node, log_queue, args):
+    print('ssssssss', gpu)
     args.gpu = gpu
     args.rank = gpu
     setup_worker_logging(args.rank, log_queue, args.log_level)
