@@ -83,11 +83,11 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         model = CLIP(**model_info)
         convert_weights(model)
         if args.default_aug:
-            preprocess_train = _transform_default(model_info.image_resolution, is_train=True)
-            preprocess_val = _transform_default(model_info.image_resolution, is_train=False)
+            preprocess_train = _transform_default(model_info['image_resolution'], is_train=True)
+            preprocess_val = _transform_default(model_info['image_resolution'], is_train=False)
         elif args.custom_aug:
-            preprocess_train = _transform_custom(model_info.image_resolution, is_train=True)
-            preprocess_val = _transform_custom(model_info.image_resolution, is_train=False)
+            preprocess_train = _transform_custom(model_info['image_resolution'], is_train=True)
+            preprocess_val = _transform_custom(model_info['image_resolution'], is_train=False)
         else:
             print('please choose the type of transforms to use in the experiment, default_aug or custom_aug')
             return -1
