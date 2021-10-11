@@ -18,7 +18,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
-  --resume="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/clip_RN18_custom_loss_3_new_eval/checkpoints/epoch_199.pt"
+  --resume="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/clip_RN18_custom_loss_3_new_eval/checkpoints/epoch_199.pt" \
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-label-key labels \
