@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_custom_loss_3_aug
+#PBS -N clip_RN18_custom_loss_3_resumed
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=2:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -13,11 +13,12 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_custom_loss_3_aug' \
+  --name='clip_RN18_custom_loss_3_resumed' \
   --save-frequency 199 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
+  --resume="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/clip_RN18_custom_loss_3_new_eval/checkpoints/epoch_199.pt"
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-label-key labels \
@@ -30,7 +31,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --workers=4 \
   --model RN18 \
   --custom-loss-3 \
-  --custom-aug \
+  --default-aug \
   --eval-train \
   --custom-eval \
   --dist-url 'tcp://localhost:10017'
