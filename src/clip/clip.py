@@ -115,7 +115,7 @@ def _transform_custom(n_px: int, is_train: bool):
             RandomApply([GaussianBlur(kernel_size=[5, 5], sigma=[.1, 2.])], p=0.5),
             _convert_to_rgb,
             ToTensor(),
-            ElasticDeform(control_points_num=3, sigma=15, axis=[1, 2]),
+            ElasticDeform(control_points_num=3, sigma=15, axis=[2, 3]),
             normalize,
         ])
     else:
