@@ -8,7 +8,7 @@ from typing import Union, List
 
 import torch
 from PIL import Image
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip, functional
+from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, RandomHorizontalFlip, Lambda, RandomApply, GaussianBlur
 from tqdm import tqdm
 
 import sys
@@ -16,6 +16,9 @@ import sys
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.model import build_model
 from clip.tokenizer import SimpleTokenizer as _Tokenizer
+
+import elasticdeform.torch as etorch
+import numpy as np
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
@@ -84,6 +87,16 @@ def _transform_default(n_px: int, is_train: bool):
         ])
 
 
+def elastic_deform(x, control_points_num=3, sigma=20, axis=(1, 2)):
+    # generate a deformation grid
+    displacement = np.random.randn(2, control_points_num, control_points_num) * sigma
+    # construct PyTorch input and top gradient
+    displacement = torch.tensor(displacement)
+    # elastic deformation
+    ed_x = etorch.deform_grid(x, displacement, prefilter=True, axis=axis)
+    return ed_x
+
+
 def _transform_custom(n_px: int, is_train: bool):
     normalize = Normalize((0.184, 0.184, 0.184), (0.055, 0.055, 0.055))
     if is_train:
@@ -91,8 +104,10 @@ def _transform_custom(n_px: int, is_train: bool):
             Resize(n_px, interpolation=Image.BICUBIC),
             RandomAffine(45, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
             RandomHorizontalFlip(),
+            RandomApply([GaussianBlur(kernel_size=[5, 5], sigma=[.1, 2.])], p=0.5),
             _convert_to_rgb,
             ToTensor(),
+            Lambda(lambda x: elastic_deform(x, control_points_num=3, sigma=15, axis=[1, 2])),
             normalize,
         ])
     else:
