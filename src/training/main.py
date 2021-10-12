@@ -15,6 +15,8 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler
 
+os.environ["NCCL_DEBUG"] = "INFO"
+
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import _transform_default, _transform_custom, load
 from clip.model import convert_weights, CLIP
@@ -38,7 +40,7 @@ def is_master(args):
 
 
 def main_worker(gpu, ngpus_per_node, log_queue, args):
-    print('Are we in???????????????????????????????????????????????????????????')
+
     args.gpu = gpu
     args.rank = gpu
     setup_worker_logging(args.rank, log_queue, args.log_level)
@@ -310,7 +312,6 @@ def main():
     if args.distributed:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
-        print('ngpus_per_node: ', ngpus_per_node)
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, log_queue, args))
     else:
         if args.dp:
