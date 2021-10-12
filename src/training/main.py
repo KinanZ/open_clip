@@ -38,7 +38,7 @@ def is_master(args):
 
 
 def main_worker(gpu, ngpus_per_node, log_queue, args):
-    print('ssssssss', gpu)
+    print('Are we in???????????????????????????????????????????????????????????')
     args.gpu = gpu
     args.rank = gpu
     setup_worker_logging(args.rank, log_queue, args.log_level)
@@ -307,10 +307,10 @@ def main():
     # Distributed training = training on more than one GPU.
     # Also easily possible to extend to multiple nodes & multiple GPUs.
     args.distributed = (args.gpu is None) and torch.cuda.is_available() and (not args.dp)
-    print('distributed?', args.distributed)
     if args.distributed:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
+        print('ngpus_per_node: ', ngpus_per_node)
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, log_queue, args))
     else:
         if args.dp:
