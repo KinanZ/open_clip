@@ -96,7 +96,6 @@ class ElasticDeform(object):
         self.axis = axis
 
     def __call__(self, x):
-        print('shape of x:', x.shape)
         # generate a deformation grid
         displacement = np.random.randn(2, self.control_points_num, self.control_points_num) * self.sigma
         # construct PyTorch input and top gradient
