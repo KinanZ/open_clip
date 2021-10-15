@@ -1,6 +1,6 @@
-#PBS -N clip_RN18_default_loss_titan
+#PBS -N clip_RN18_custom_loss_3_p100
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=4:gpus=2:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=4:gpus=4:ubuntu2004:nvidiaP100,mem=64gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
@@ -8,14 +8,12 @@
 homePath='/misc/student/alzouabk/miniconda3'
 source $homePath/bin/activate open_clip
 
-export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
-
 echo "pid, gpu_utilization [%], mem_utilization [%], max_memory_usage [MiB], time [ms]"
 nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" --format=csv | tail -n1
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_default_loss_titan' \
+  --name='clip_RN18_custom_loss_3_p100' \
   --save-frequency 199 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
@@ -25,13 +23,13 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=35 \
+  --batch-size=48 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=3 \
+  --epochs=400 \
   --workers=8 \
   --model RN18 \
-  --default-loss \
+  --custom-loss-3 \
   --default-aug \
   --eval-train \
   --custom-eval \
