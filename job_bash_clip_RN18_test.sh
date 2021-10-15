@@ -1,6 +1,6 @@
-#PBS -N clip_RN18_p100_test
+#PBS -N clip_RN18_3090_test
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=6:gpus=1:ubuntu2004:nvidiaP100,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=6:gpus=2:ubuntu2004:nvidiaRTX3090,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
@@ -8,12 +8,14 @@
 homePath='/misc/student/alzouabk/miniconda3'
 source $homePath/bin/activate open_clip
 
+export NCCL_IB_DISABLE=1
+
 echo "pid, gpu_utilization [%], mem_utilization [%], max_memory_usage [MiB], time [ms]"
 nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" --format=csv | tail -n1
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_p100_test' \
+  --name='clip_RN18_3090_test' \
   --save-frequency 199 \
   --report-to tensorboard \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
