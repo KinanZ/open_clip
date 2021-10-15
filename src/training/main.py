@@ -15,7 +15,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler
 
-os.environ["NCCL_DEBUG"] = "INFO"
+#os.environ["NCCL_DEBUG"] = "INFO"
 
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import _transform_default, _transform_custom, load
@@ -40,7 +40,6 @@ def is_master(args):
 
 
 def main_worker(gpu, ngpus_per_node, log_queue, args):
-
     args.gpu = gpu
     args.rank = gpu
     setup_worker_logging(args.rank, log_queue, args.log_level)
