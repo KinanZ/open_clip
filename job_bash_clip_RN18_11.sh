@@ -26,10 +26,10 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=64 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=3 \
+  --epochs=400 \
   --workers=8 \
   --model RN18 \
-  --default-loss \
+  --custom-loss-3 \
   --default-aug \
   --eval-train \
   --custom-eval \
