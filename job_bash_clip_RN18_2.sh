@@ -10,7 +10,6 @@ source $homePath/bin/activate open_clip
 
 export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
 
-
 echo "pid, gpu_utilization [%], mem_utilization [%], max_memory_usage [MiB], time [ms]"
 nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" --format=csv | tail -n1
 
