@@ -1,6 +1,6 @@
 #PBS -N clip_RN18_custom_loss_3_3090
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=8:gpus=4:ubuntu2004:nvidiaRTX3090,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=4:gpus=2:ubuntu2004:nvidiaRTX3090,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
@@ -26,7 +26,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=64 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=300 \
+  --epochs=3 \
   --workers=8 \
   --model RN18 \
   --custom-loss-3 \
