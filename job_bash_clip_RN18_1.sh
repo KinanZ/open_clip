@@ -16,6 +16,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --name='clip_RN18_text_aug_hflip' \
   --save-frequency 199 \
   --report-to tensorboard \
+  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
   --csv-img-key filepath \
@@ -26,7 +27,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=35 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=250 \
   --workers=4 \
   --model RN18 \
   --custom-loss-3 \

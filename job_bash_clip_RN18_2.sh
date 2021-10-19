@@ -22,15 +22,15 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-caption-key sentence \
   --csv-label-key labels \
   --csv-separator="," \
-  --warmup 2500 \
+  --warmup 1250 \
   --batch-size=64 \
-  --lr=0.0001 \
+  --lr=0.0004 \
   --wd=0.1 \
   --epochs=300 \
   --workers=8 \
   --model RN18 \
   --default-loss \
-  --default-aug \
+  --default-aug-img \
   --eval-train \
   --custom-eval \
   --use-bn-sync \

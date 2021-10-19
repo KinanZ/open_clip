@@ -30,7 +30,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --workers=8 \
   --model RN18 \
   --custom-loss-3 \
-  --default-aug \
+  --default-aug-img \
   --eval-train \
   --custom-eval \
   --use-bn-sync \
