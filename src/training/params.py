@@ -203,16 +203,40 @@ def parse_args():
     )
     # My params
     parser.add_argument(
-        "--default-aug",
+        "--default-aug-img",
         default=False,
         action="store_true",
         help="Whether to use the default clip transforms"
     )
     parser.add_argument(
-        "--custom-aug",
+        "--custom-aug-img",
         default=False,
         action="store_true",
         help="Whether to use our custom transforms"
+    )
+    parser.add_argument(
+        "--set-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the set augment function on the captions"
+    )
+    parser.add_argument(
+        "--hflip-aug",
+        default=False,
+        action="store_true",
+        help="Whether to use the horizontal flip function on image and caption"
+    )
+    parser.add_argument(
+        "--negative-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment negative on the captions"
+    )
+    parser.add_argument(
+        "--positive-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment positive on the captions"
     )
     parser.add_argument(
         "--csv-label-key",
@@ -256,6 +280,7 @@ def parse_args():
         action="store_true",
         help="Updated evaluations"
     )
+
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
 

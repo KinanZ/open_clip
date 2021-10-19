@@ -19,43 +19,76 @@ import torch
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from torch.utils.data.distributed import DistributedSampler
 import torchvision.datasets as datasets
+import torchvision.transforms.functional as F
 from webdataset.utils import identity
 import webdataset as wds
 
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import tokenize
+from training.text_aug import SetAugmenter, ReplaceAugmenter, groups
+
+from collections import defaultdict
 
 
 class CsvDataset(Dataset):
-    def __init__(self, input_filename, transforms, img_key, caption_key, labels_key=None,  sep="\t"):
+    def __init__(self, input_filename, transforms_img, transforms_text, img_key, caption_key, labels_key=None,
+                 sep="\t"):
         logging.debug(f'Loading csv data from {input_filename}.')
         df = pd.read_csv(input_filename, sep=sep)
 
         self.images = df[img_key].tolist()
         self.captions = df[caption_key].tolist()
+        self.captions = ['Kein Hinweis auf Fraktur , Blutung oder frisches ischämisches Areal .' if x != x else x for x
+                         in self.captions]
 
         if labels_key is not None:
             self.labels = df[labels_key].tolist()
+            for i, c in enumerate(self.labels):
+                self.labels[i] = list(set(eval(c)))
+            self.class2sentences = defaultdict(list)
+            for c, s in zip(self.labels, self.captions):
+                self.class2sentences[str(c)].append(s)
+            self.class2sentences['[0]'] = list(set(self.class2sentences['[0]']))
         else:
             self.labels = None
 
-        self.transforms = transforms
+        self.transforms_img = transforms_img
+        if labels_key is not None:
+            self.transforms_text = transforms_text
+            self.text_replace_aug = ReplaceAugmenter(groups)
+            self.text_set_aug = SetAugmenter(self.class2sentences['[0]'])
         logging.debug('Done loading data.')
 
     def __len__(self):
         return len(self.captions)
 
     def __getitem__(self, idx):
-        images = self.transforms(Image.open(str(self.images[idx])))
-        texts = tokenize([str(self.captions[idx])])[0]
+        image = self.transforms_img(Image.open(str(self.images[idx])))
+        text = [str(self.captions[idx])]
 
         if self.labels is not None:
             gt_labels = self.labels[idx]
-            labels = torch.zeros(15) # 15 is the number of classes
-            labels[eval(gt_labels)] = 1
-            return images, texts, labels
+            labels = torch.zeros(15)  # 15 is the number of classes
+            labels[gt_labels] = 1
+
+            if self.transforms_text[0] and gt_labels[0] == 0:
+                text[0] = self.text_set_aug.aug_set(None)
+            if self.transforms_text[1]:
+                if random.random() < 0.5:
+                    aug_text = self.text_replace_aug.aug_flip_horizontal(text[0])
+                    if aug_text != text[0]:
+                        text[0] = aug_text
+                        image = F.hflip(image)
+            if self.transforms_text[2]:
+                text[0] = self.text_replace_aug.aug_negative(text[0])
+            if self.transforms_text[3]:
+                text[0] = self.text_replace_aug.aug_positive(text[0])
+
+            text = tokenize(text)[0]
+            return image, text, labels
         else:
-            return images, texts, []
+            return image, text, []
+
 
 @dataclass
 class DataInfo:
@@ -87,7 +120,7 @@ def get_imagenet(args, preprocess_fns, split):
         dataset = ImageNetV2Dataset(location=args.imagenet_v2, transform=preprocess_val)
     else:
         if is_train:
-            data_path  = args.imagenet_train
+            data_path = args.imagenet_train
             preprocess_fn = preprocess_train
         else:
             data_path = args.imagenet_val
@@ -153,11 +186,11 @@ def get_wds_dataset(args, preprocess_img, is_train):
     )
     dataset = (
         wds.WebDataset(shardlist)
-        .decode("pil")
-        .rename(image="jpg;png", text="txt")
-        .map_dict(image=preprocess_img, text=preprocess_txt)
-        .to_tuple("image", "text")
-        .batched(args.batch_size, partial=not is_train or not args.distributed)
+            .decode("pil")
+            .rename(image="jpg;png", text="txt")
+            .map_dict(image=preprocess_img, text=preprocess_txt)
+            .to_tuple("image", "text")
+            .batched(args.batch_size, partial=not is_train or not args.distributed)
     )
     dataloader = wds.WebLoader(
         dataset, batch_size=None, shuffle=False, num_workers=args.workers,
@@ -172,12 +205,13 @@ def get_wds_dataset(args, preprocess_img, is_train):
     return DataInfo(dataloader, None)
 
 
-def get_csv_dataset(args, preprocess_fn, is_train):
+def get_csv_dataset(args, preprocess_fn_img, preprocess_fn_text, is_train):
     input_filename = args.train_data if is_train else args.val_data
     assert input_filename
     dataset = CsvDataset(
         input_filename,
-        preprocess_fn,
+        preprocess_fn_img,
+        preprocess_fn_text,
         img_key=args.csv_img_key,
         caption_key=args.csv_caption_key,
         labels_key=args.csv_label_key,
@@ -200,6 +234,7 @@ def get_csv_dataset(args, preprocess_fn, is_train):
 
     return DataInfo(dataloader, sampler)
 
+
 def get_dataset_fn(data_path, dataset_type):
     if dataset_type == "webdataset":
         return get_wds_dataset
@@ -216,18 +251,18 @@ def get_dataset_fn(data_path, dataset_type):
                 f"Tried to figure out dataset type, but failed for extention {ext}.")
     else:
         raise ValueError(f"Unsupported dataset type: {dataset_type}")
-    
+
 
 def get_data(args, preprocess_fns):
-    preprocess_train, preprocess_val = preprocess_fns
+    preprocess_train_img, preprocess_val_img, preprocess_train_text, preprocess_val_text = preprocess_fns
     data = {}
 
     if args.train_data:
         data["train"] = get_dataset_fn(args.train_data, args.dataset_type)(
-            args, preprocess_train, is_train=True)
+            args, preprocess_train_img, preprocess_train_text, is_train=True)
     if args.val_data:
         data["val"] = get_dataset_fn(args.val_data, args.dataset_type)(
-            args, preprocess_val, is_train=False)
+            args, preprocess_val_img, preprocess_val_text, is_train=False)
 
     if args.imagenet_val is not None:
         data["imagenet-val"] = get_imagenet(args, preprocess_fns, "val")

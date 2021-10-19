@@ -110,8 +110,7 @@ def _transform_custom(n_px: int, is_train: bool):
     if is_train:
         return Compose([
             Resize(n_px, interpolation=Image.BICUBIC),
-            RandomAffine(45, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
-            RandomHorizontalFlip(),
+            RandomAffine(15, translate=[0.2, 0.2], scale=[0.5, 1.5], shear=0.2),
             RandomApply([GaussianBlur(kernel_size=[5, 5], sigma=[.1, 2.])], p=0.5),
             _convert_to_rgb,
             ToTensor(),

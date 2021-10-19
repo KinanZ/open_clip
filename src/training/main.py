@@ -26,6 +26,7 @@ from training.params import parse_args
 from training.logger import setup_primary_logging, setup_worker_logging
 from training.scheduler import cosine_lr
 
+
 # Used by https://github.com/openai/CLIP/issues/83 but not below.
 # Keeping it incase needed.
 def convert_models_to_fp32(model):
@@ -53,7 +54,7 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
                 val = getattr(args, name)
                 logging.info(f"  {name}: {val}")
                 f.write(f"{name}: {val}\n")
-            
+
     if args.distributed:
         dist.init_process_group(
             backend=args.dist_backend,
@@ -61,7 +62,7 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
             world_size=args.world_size,
             rank=args.rank,
         )
-    
+
     if args.dp:
         args.batch_size *= args.world_size
 
@@ -71,7 +72,7 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
 
     # Do not use skip_reset unless you want to use on of the CLIP model
     if args.openai_pretrained:
-        model, preprocess_train, preprocess_val = load(
+        model, preprocess_train_img, preprocess_val_img = load(
             args.model,
             jit=False,
             is_train=True,
@@ -84,15 +85,17 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
             model_info = json.load(f)
         model = CLIP(**model_info)
         convert_weights(model)
-        if args.default_aug:
-            preprocess_train = _transform_default(model_info['image_resolution'], is_train=True)
-            preprocess_val = _transform_default(model_info['image_resolution'], is_train=False)
-        elif args.custom_aug:
-            preprocess_train = _transform_custom(model_info['image_resolution'], is_train=True)
-            preprocess_val = _transform_custom(model_info['image_resolution'], is_train=False)
+        if args.default_aug_img:
+            preprocess_train_img = _transform_default(model_info['image_resolution'], is_train=True)
+            preprocess_val_img = _transform_default(model_info['image_resolution'], is_train=False)
+        elif args.custom_aug_img:
+            preprocess_train_img = _transform_custom(model_info['image_resolution'], is_train=True)
+            preprocess_val_img = _transform_custom(model_info['image_resolution'], is_train=False)
         else:
             print('please choose the type of transforms to use in the experiment, default_aug or custom_aug')
             return -1
+        preprocess_train_text = [args.set_aug_text, args.hflip_aug, args.negative_aug_text, args.positive_aug_text]
+        preprocess_val_text = [False, False, False, False]
 
     # See https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/81372
     if args.precision == "amp" or args.precision == "fp32" or args.gpu is None:
@@ -119,10 +122,10 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         if args.precision == "fp16":
             convert_weights(model)
 
-    data = get_data(args, (preprocess_train, preprocess_val))
+    data = get_data(args, (preprocess_train_img, preprocess_val_img, preprocess_train_text, preprocess_val_text))
 
-    exclude = lambda n : "bn" in n or "ln" in n or "bias" in n or 'logit_scale' in n
-    include = lambda n : not exclude(n)
+    exclude = lambda n: "bn" in n or "ln" in n or "bias" in n or 'logit_scale' in n
+    include = lambda n: not exclude(n)
 
     named_parameters = list(model.named_parameters())
     gain_or_bias_params = [p for n, p in named_parameters if exclude(n) and p.requires_grad]
@@ -175,7 +178,7 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
     # determine if this worker should save logs and checkpoints.
     # only do so if it is the 0th worker.
     args.save_logs = (args.logs is not None and args.logs != '' and args.logs.lower() != 'none') and (
-        (not args.distributed) or args.gpu == 0
+            (not args.distributed) or args.gpu == 0
     )
     writer = None
     if args.save_logs and args.tensorboard:
@@ -216,11 +219,10 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         if args.val_data is not None:
             evaluate(model, data, epoch + 1, args, writer, steps)
 
-
         # Saving checkpoints.
         if args.save_logs and (args.gpu == 0 or (not args.distributed)):
             if (epoch + 1) == args.epochs or (
-                args.save_frequency > 0 and ((epoch + 1) % args.save_frequency) == 0
+                    args.save_frequency > 0 and ((epoch + 1) % args.save_frequency) == 0
             ):
                 torch.save(
                     {
@@ -283,7 +285,7 @@ def main():
         return -1
 
     assert args.precision in ['amp', 'fp16', 'fp32']
-    #assert args.model in ['RN50', 'RN101', 'RN50x4', 'ViT-B/32'] or os.path.exists(args.model)
+    # assert args.model in ['RN50', 'RN101', 'RN50x4', 'ViT-B/32'] or os.path.exists(args.model)
 
     args.ngpus_per_node = torch.cuda.device_count()
 
@@ -295,7 +297,6 @@ def main():
     for dirname in [args.tensorboard_path, args.checkpoint_path]:
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-    
 
     # Set multiprocessing type to spawn.
     # This is important for logging to work with multiprocessing.
