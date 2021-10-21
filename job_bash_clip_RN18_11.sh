@@ -16,6 +16,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --name='clip_RN18_custom_loss_3_bigger_lr' \
   --save-frequency 199 \
   --report-to tensorboard \
+  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_2/' \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
   --csv-img-key filepath \
