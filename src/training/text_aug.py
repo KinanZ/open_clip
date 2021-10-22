@@ -41,8 +41,9 @@ class SetAugmenter:
 
 class ReplaceAugmenter:
     def __init__(self, groups):
-        self.ant_probability = 1.0
+        self.ant_probability = .5
         self.syn_probability = .5
+        self.flip_probability = .5
 
         self.antonym_changes = 0
         self.synonym_changes = 0
@@ -117,5 +118,9 @@ class ReplaceAugmenter:
     def aug_flip_horizontal(self, sent):
         # flip horizontal must always replace all
         def repl(matchobj):
-            return self.rl_dict[matchobj.group(0)]
+            word = matchobj.group(0)
+            if np.random.random() < self.flip_probability:
+                return self.rl_dict[word]
+            else:
+                return word
         return re.sub(self.rl_pattern, repl, sent)

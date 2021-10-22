@@ -76,11 +76,10 @@ class CsvDataset(Dataset):
                     text[0] = self.text_set_aug.aug_set(None)
             else:
                 if self.transforms_text[1]:
-                    if random.random() < 0.5:
-                        aug_text = self.text_replace_aug.aug_flip_horizontal(text[0])
-                        if aug_text != text[0]:
-                            text[0] = aug_text
-                            image = F.hflip(image)
+                    aug_text = self.text_replace_aug.aug_flip_horizontal(text[0])
+                    if aug_text != text[0]:
+                        text[0] = aug_text
+                        image = F.hflip(image)
                 if self.transforms_text[2]:
                     text[0] = self.text_replace_aug.aug_negative(text[0])
                 if self.transforms_text[3]:
