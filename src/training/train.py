@@ -315,9 +315,14 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         )
 
         if args.save_logs:
-            for name, val in metrics.items():
-                if tb_writer is not None:
+            if tb_writer is not None:
+                for name, val in metrics.items():
                     tb_writer.add_scalar(f"val/{name}", val, epoch)
+                if args.t_sne:
+                    tb_writer.add_embedding(mat=torch.cat(all_image_features), metadata=torch.cat(all_labels),
+                                            global_step=epoch, tag='val_image_features')
+                    tb_writer.add_embedding(mat=torch.cat(all_text_features), metadata=torch.cat(all_labels),
+                                            global_step=epoch, tag='val_text_features')
         if args.wandb:
             for name, val in metrics.items():
                 wandb.log({f"val/{name}": val, 'epoch': epoch})
@@ -434,9 +439,15 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
         )
 
         if args.save_logs:
-            for name, val in metrics.items():
-                if tb_writer is not None:
+            if tb_writer is not None:
+                for name, val in metrics.items():
                     tb_writer.add_scalar(f"train_eval/{name}", val, epoch)
+                if args.t_sne:
+                    tb_writer.add_embedding(mat=torch.cat(all_image_features), metadata=torch.cat(all_labels),
+                                            global_step=epoch, tag='train_image_features')
+                    tb_writer.add_embedding(mat=torch.cat(all_text_features), metadata=torch.cat(all_labels),
+                                            global_step=epoch, tag='train_text_features')
+
         if args.wandb:
             for name, val in metrics.items():
                 wandb.log({f"train_eval/{name}": val, 'epoch': epoch})

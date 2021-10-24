@@ -5,6 +5,8 @@ from time import gmtime, strftime
 from pathlib import Path
 import json
 import sys
+import random
+import numpy as np
 
 import wandb
 import torch
@@ -251,6 +253,11 @@ def main():
             f"batchsize={args.batch_size}_workers={args.workers}_date=%Y-%m-%d-%H-%M-%S",
             gmtime(),
         )
+
+    # initialize the random seed
+    random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
     if args.copy_codebase:
         import sys, subprocess

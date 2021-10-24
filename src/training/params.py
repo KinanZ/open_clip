@@ -280,7 +280,15 @@ def parse_args():
         action="store_true",
         help="Updated evaluations"
     )
-
+    parser.add_argument(
+        "--seed", type=int, default=101, help="random seed"
+    )
+    parser.add_argument(
+        "--t-sne",
+        default=False,
+        action="store_true",
+        help="log feature embedding?"
+    )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
 
