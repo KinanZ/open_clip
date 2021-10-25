@@ -319,7 +319,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             if tb_writer is not None:
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"val/{name}", val, epoch)
-                if args.t_sne:
+                if args.t_sne and epoch % 10 == 0:
                     all_labels_onehot = torch.cat(all_labels)
                     all_labels_int = []
                     for index in range(all_labels_onehot.shape[0]):
@@ -454,7 +454,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
             if tb_writer is not None:
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"train_eval/{name}", val, epoch)
-                if args.t_sne:
+                if args.t_sne and epoch % 10 == 0:
                     all_labels_onehot = torch.cat(all_labels)
                     all_labels_int = []
                     for index in range(all_labels_onehot.shape[0]):
