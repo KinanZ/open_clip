@@ -324,11 +324,13 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                     all_labels_int = []
                     for index in range(all_labels_onehot.shape[0]):
                         all_labels_int.append(onehot_to_int(all_labels_onehot[index]))
+                    all_image_features = torch.cat(all_image_features).cpu().detach().numpy()
+                    all_text_features = torch.cat(all_text_features).cpu().detach().numpy()
                     pca = decomposition.PCA(n_components=36)
-                    pca.fit(torch.cat(all_image_features).cpu())
-                    all_image_features = pca.transform(torch.cat(all_image_features).cpu())
-                    pca.fit(torch.cat(all_text_features).cpu())
-                    all_text_features = pca.transform(torch.cat(all_text_features).cpu())
+                    pca.fit(all_image_features)
+                    all_image_features = pca.transform(all_image_features)
+                    pca.fit(all_text_features)
+                    all_text_features = pca.transform(all_text_features)
                     tb_writer.add_embedding(mat=all_image_features, metadata=all_labels_int,
                                             global_step=epoch, tag='val_image_features')
                     tb_writer.add_embedding(mat=all_text_features, metadata=all_labels_int,
@@ -457,11 +459,13 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                     all_labels_int = []
                     for index in range(all_labels_onehot.shape[0]):
                         all_labels_int.append(onehot_to_int(all_labels_onehot[index]))
+                    all_image_features = torch.cat(all_image_features).cpu().detach().numpy()
+                    all_text_features = torch.cat(all_text_features).cpu().detach().numpy()
                     pca = decomposition.PCA(n_components=36)
-                    pca.fit(torch.cat(all_image_features).cpu())
-                    all_image_features = pca.transform(torch.cat(all_image_features).cpu())
-                    pca.fit(torch.cat(all_text_features).cpu())
-                    all_text_features = pca.transform(torch.cat(all_text_features).cpu())
+                    pca.fit(all_image_features)
+                    all_image_features = pca.transform(all_image_features)
+                    pca.fit(all_text_features)
+                    all_text_features = pca.transform(all_text_features)
                     tb_writer.add_embedding(mat=all_image_features, metadata=all_labels_int,
                                             global_step=epoch, tag='train_image_features')
                     tb_writer.add_embedding(mat=all_text_features, metadata=all_labels_int,
