@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_custom_loss_3_smaller_lr
+#PBS -N clip_RN18_custom_loss_4_smaller_lr
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=8:gpus=4:ubuntu2004:nvidiaRTX3090,mem=64gb,walltime=24:00:00
 #PBS -j oe
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_custom_loss_3_smaller_lr' \
+  --name='clip_RN18_custom_loss_4_smaller_lr' \
   --save-frequency 199 \
   --report-to tensorboard \
   --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_2/' \
@@ -30,7 +30,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=300 \
   --workers=8 \
   --model RN18 \
-  --custom-loss-3 \
+  --custom-loss-4 \
   --default-aug-img \
   --eval-train \
   --custom-eval \
