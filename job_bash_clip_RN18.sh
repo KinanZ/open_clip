@@ -27,7 +27,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=35 \
   --lr=0.0002 \
   --wd=0.1 \
-  --epochs=10 \
+  --epochs=5 \
   --workers=4 \
   --model RN18 \
   --custom-loss-3 \

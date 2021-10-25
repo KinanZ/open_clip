@@ -5,6 +5,7 @@ import numpy as np
 
 import torch
 import torch.nn as nn
+from sklearn import decomposition
 
 from torch.cuda.amp import autocast
 import torch.distributed as dist
@@ -319,9 +320,16 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"val/{name}", val, epoch)
                 if args.t_sne:
-                    tb_writer.add_embedding(mat=torch.cat(all_image_features), metadata=torch.cat(all_labels),
+                    for index, label in enumerate(all_labels):
+                        all_labels[index] = onehot_to_int(all_labels[index])
+                    pca = decomposition.PCA(n_components=36)
+                    pca.fit(torch.cat(all_image_features))
+                    all_image_features = pca.transform(torch.cat(all_image_features))
+                    pca.fit(torch.cat(all_text_features))
+                    all_text_features = pca.transform(torch.cat(all_text_features))
+                    tb_writer.add_embedding(mat=all_image_features, metadata=all_labels,
                                             global_step=epoch, tag='val_image_features')
-                    tb_writer.add_embedding(mat=torch.cat(all_text_features), metadata=torch.cat(all_labels),
+                    tb_writer.add_embedding(mat=all_text_features, metadata=all_labels,
                                             global_step=epoch, tag='val_text_features')
         if args.wandb:
             for name, val in metrics.items():
@@ -443,10 +451,17 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"train_eval/{name}", val, epoch)
                 if args.t_sne:
-                    tb_writer.add_embedding(mat=torch.cat(all_image_features), metadata=torch.cat(all_labels),
-                                            global_step=epoch, tag='train_image_features')
-                    tb_writer.add_embedding(mat=torch.cat(all_text_features), metadata=torch.cat(all_labels),
-                                            global_step=epoch, tag='train_text_features')
+                    for index, label in enumerate(all_labels):
+                        all_labels[index] = onehot_to_int(all_labels[index])
+                    pca = decomposition.PCA(n_components=36)
+                    pca.fit(torch.cat(all_image_features))
+                    all_image_features = pca.transform(torch.cat(all_image_features))
+                    pca.fit(torch.cat(all_text_features))
+                    all_text_features = pca.transform(torch.cat(all_text_features))
+                    tb_writer.add_embedding(mat=all_image_features, metadata=all_labels,
+                                            global_step=epoch, tag='val_image_features')
+                    tb_writer.add_embedding(mat=all_text_features, metadata=all_labels,
+                                            global_step=epoch, tag='val_text_features')
 
         if args.wandb:
             for name, val in metrics.items():
@@ -516,3 +531,7 @@ def get_metrics_custom(image_features, text_features, labels, texts):
             metrics[f"{name}_R@{k}"] = np.mean(preds < k)
 
     return metrics
+
+
+def onehot_to_int(lst):
+    return [i for i, x in enumerate(lst) if x > 0]
