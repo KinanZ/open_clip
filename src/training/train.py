@@ -320,7 +320,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"val/{name}", val, epoch)
                 if args.t_sne:
-                    for index, label in enumerate(all_labels):
+                    for index in range(len(all_labels)):
                         all_labels[index] = onehot_to_int(all_labels[index])
                     pca = decomposition.PCA(n_components=36)
                     pca.fit(torch.cat(all_image_features))
@@ -451,7 +451,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                 for name, val in metrics.items():
                     tb_writer.add_scalar(f"train_eval/{name}", val, epoch)
                 if args.t_sne:
-                    for index, label in enumerate(all_labels):
+                    for index in range(len(all_labels)):
                         all_labels[index] = onehot_to_int(all_labels[index])
                     pca = decomposition.PCA(n_components=36)
                     pca.fit(torch.cat(all_image_features))
@@ -534,4 +534,5 @@ def get_metrics_custom(image_features, text_features, labels, texts):
 
 
 def onehot_to_int(lst):
+    print(lst)
     return [i for i, x in enumerate(lst) if x > 0]
