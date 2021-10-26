@@ -2,7 +2,7 @@
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
-#PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_2/
+#PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
 
 homePath='/misc/student/alzouabk/miniconda3'
@@ -16,7 +16,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --name='clip_RN18_custom_loss_3_Tsne' \
   --save-frequency 199 \
   --report-to tensorboard \
-  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_2/' \
+  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
   --csv-img-key filepath \
@@ -35,4 +35,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --eval-train \
   --custom-eval \
   --use-bn-sync \
+  --t-sne \
   --dist-url 'tcp://localhost:10016'
