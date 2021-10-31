@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_custom_loss_3_Tsne
+#PBS -N clip_RN18_de_tokenize
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -13,27 +13,29 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_custom_loss_3_Tsne' \
+  --name='clip_RN18_de_tokenize' \
   --save-frequency 199 \
   --report-to tensorboard \
+  --t-sne \
   --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
-  --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels.csv"  \
-  --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels.csv"  \
+  --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels_bboxes.csv"  \
+  --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels_bboxes.csv"  \
   --csv-img-key filepath \
   --csv-caption-key sentence \
   --csv-label-key labels \
+  --csv-bbox-key bboxes \
   --csv-separator="," \
   --warmup 2500 \
   --batch-size=35 \
   --lr=0.00015 \
   --wd=0.1 \
   --epochs=200 \
-  --workers=8 \
+  --workers=4 \
   --model RN18 \
   --custom-loss-3 \
   --default-aug-img \
   --eval-train \
+  --use-de-tokenizer \
   --custom-eval \
-  --use-bn-sync \
-  --t-sne \
-  --dist-url 'tcp://localhost:10016'
+  --seed=101 \
+  --dist-url 'tcp://localhost:10027'

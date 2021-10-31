@@ -16,13 +16,15 @@ import sys
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.model import build_model
 from clip.tokenizer import SimpleTokenizer as _Tokenizer
+from clip.de_tokenizer import Tokenizer as de_Tokenizer
 
 import elasticdeform.torch as etorch
 import numpy as np
+from transformers import AutoTokenizer
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
-
+de_tokenize = de_Tokenizer(AutoTokenizer.from_pretrained("bert-base-german-cased"), context_length=118)
 _MODELS = {
     "RN50": "https://openaipublic.azureedge.net/clip/models/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt",
     "RN101": "https://openaipublic.azureedge.net/clip/models/8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599/RN101.pt",
@@ -242,7 +244,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
            transform_val
 
 
-def tokenize(texts: Union[str, List[str]], context_length: int = 118) -> torch.LongTensor:
+def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tokenizer: bool = False) -> torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
     Parameters
@@ -256,17 +258,21 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 118) -> torch.L
     -------
     A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length]
     """
-    if isinstance(texts, str):
-        texts = [texts]
+    if use_de_tokenizer:
+        result = de_tokenize(texts)['input_ids']
+        return result
+    else:
+        if isinstance(texts, str):
+            texts = [texts]
 
-    sot_token = _tokenizer.encoder["<start_of_text>"]
-    eot_token = _tokenizer.encoder["<end_of_text>"]
-    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]
-    result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
+        sot_token = _tokenizer.encoder["<start_of_text>"]
+        eot_token = _tokenizer.encoder["<end_of_text>"]
+        all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]
+        result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
-    for i, tokens in enumerate(all_tokens):
-        if len(tokens) > context_length: # Truncate
-            tokens = tokens[:context_length]
-        result[i, :len(tokens)] = torch.tensor(tokens)
+        for i, tokens in enumerate(all_tokens):
+            if len(tokens) > context_length: # Truncate
+                tokens = tokens[:context_length]
+            result[i, :len(tokens)] = torch.tensor(tokens)
 
-    return result
+        return result

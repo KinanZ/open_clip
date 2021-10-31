@@ -203,18 +203,6 @@ def parse_args():
     )
     # My params
     parser.add_argument(
-        "--default-aug-img",
-        default=False,
-        action="store_true",
-        help="Whether to use the default clip transforms"
-    )
-    parser.add_argument(
-        "--custom-aug-img",
-        default=False,
-        action="store_true",
-        help="Whether to use our custom transforms"
-    )
-    parser.add_argument(
         "--set-aug-text",
         default=False,
         action="store_true",
@@ -239,10 +227,22 @@ def parse_args():
         help="Whether to use the augment positive on the captions"
     )
     parser.add_argument(
+        "--skip-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment skipping some words and replacing them with _ "
+    )
+    parser.add_argument(
         "--csv-label-key",
         type=str,
         default="labels",
         help="For csv-like datasets, the name of the key for the labels."
+    )
+    parser.add_argument(
+        "--csv-bbox-key",
+        type=str,
+        default="bboxes",
+        help="For csv-like datasets, the name of the key for the bboxes."
     )
     parser.add_argument(
         "--default-loss",
@@ -288,6 +288,30 @@ def parse_args():
         default=False,
         action="store_true",
         help="log feature embedding?"
+    )
+    parser.add_argument(
+        "--default-aug-img",
+        default=False,
+        action="store_true",
+        help="Whether to use the default clip transforms"
+    )
+    parser.add_argument(
+        "--custom-aug-img",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom transforms"
+    )
+    parser.add_argument(
+        "--bbox-aug-img",
+        default=False,
+        action="store_true",
+        help="Whether to use bbox aug on the images"
+    )
+    parser.add_argument(
+        "--use-de-tokenizer",
+        default=False,
+        action="store_true",
+        help="Whether to use the new german tokenizer"
     )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate

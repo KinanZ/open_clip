@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from nltk.tokenize import word_tokenize
 
 groups = [
     ["ventral", "dorsal"],  # parietal
@@ -124,3 +125,14 @@ class ReplaceAugmenter:
             else:
                 return word
         return re.sub(self.rl_pattern, repl, sent)
+
+
+def skip_some_words(sent):
+    words = word_tokenize(sent)
+    num_skip = np.random.randint(0, np.floor(len(words)/4))
+    idx_skip = [np.random.randint(0, len(words)) for i in range(num_skip)]
+    for idx in idx_skip:
+        words[idx] = '_'
+
+    new_sent = ' '.join(words)
+    return new_sent

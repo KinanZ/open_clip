@@ -35,4 +35,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --eval-train \
   --custom-eval \
   --use-bn-sync \
+  --t-sne \
   --dist-url 'tcp://localhost:10017'

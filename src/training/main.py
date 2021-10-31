@@ -96,8 +96,10 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         else:
             print('please choose the type of transforms to use in the experiment, default_aug or custom_aug')
             return -1
-        preprocess_train_text = [args.set_aug_text, args.hflip_aug, args.negative_aug_text, args.positive_aug_text]
-        preprocess_val_text = [False, False, False, False]
+        preprocess_train_text = [args.set_aug_text, args.hflip_aug, args.negative_aug_text, args.positive_aug_text, args.skip_aug_text]
+        preprocess_val_text = [False, False, False, False, False]
+        preprocess_train_bbox = args.bbox_aug_img
+        preprocess_val_bbox = False
 
     # See https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/81372
     if args.precision == "amp" or args.precision == "fp32" or args.gpu is None:
@@ -124,7 +126,9 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         if args.precision == "fp16":
             convert_weights(model)
 
-    data = get_data(args, (preprocess_train_img, preprocess_val_img, preprocess_train_text, preprocess_val_text))
+    data = get_data(args, (preprocess_train_img, preprocess_val_img,
+                           preprocess_train_text, preprocess_val_text,
+                           preprocess_train_bbox, preprocess_val_bbox))
 
     exclude = lambda n: "bn" in n or "ln" in n or "bias" in n or 'logit_scale' in n
     include = lambda n: not exclude(n)
