@@ -32,7 +32,7 @@ from collections import defaultdict
 
 class CsvDataset(Dataset):
     def __init__(self, input_filename, transforms_img, transforms_text, transform_bbox, img_key, caption_key,
-                 labels_key=None, bboxes_key=None, sep="\t", DE_tokenizer=False):
+                 labels_key=None, bboxes_key=None, sep="\t", use_de_tokenizer=False):
         logging.debug(f'Loading csv data from {input_filename}.')
         df = pd.read_csv(input_filename, sep=sep)
 
@@ -66,7 +66,7 @@ class CsvDataset(Dataset):
             self.text_set_aug = SetAugmenter(self.class2sentences['[0]'])
         logging.debug('Done loading data.')
 
-        self.DE_tokenizer = DE_tokenizer
+        self.use_de_tokenizer = use_de_tokenizer
 
     def __len__(self):
         return len(self.captions)
@@ -101,11 +101,11 @@ class CsvDataset(Dataset):
                 if self.transform_bbox:
                     image = crop_show_augment(image, labels, bboxes)
 
-            text = tokenize(text, DE_tokenizer=self.DE_tokenizer)[0]
+            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer)[0]
             image = self.transforms_img(image)
             return image, text, labels
         else:
-            text = tokenize(text, DE_tokenizer=self.DE_tokenizer)[0]
+            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer)[0]
             image = self.transforms_img(image)
             return image, text, []
 
