@@ -129,7 +129,10 @@ class ReplaceAugmenter:
 
 def skip_some_words(sent):
     words = word_tokenize(sent)
-    num_skip = np.random.randint(0, np.floor(len(words)/4))
+    if np.floor(len(words)/4) > 0:
+        num_skip = np.random.randint(0, np.floor(len(words)/4))
+    else:
+        num_skip = 0
     idx_skip = [np.random.randint(0, len(words)) for i in range(num_skip)]
     for idx in idx_skip:
         words[idx] = '_'
