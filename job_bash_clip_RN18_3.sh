@@ -29,7 +29,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=35 \
   --lr=0.0001 \
   --wd=0.1 \
-  --epochs=100 \
+  --epochs=2 \
   --workers=4 \
   --custom-loss-3 \
   --default-aug-img \
