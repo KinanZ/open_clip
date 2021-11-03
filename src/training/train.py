@@ -165,8 +165,12 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
 
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
-            #texts = texts.cuda(args.gpu, non_blocking=True)
             labels = labels.cuda(args.gpu, non_blocking=True)
+            if args.new_model:
+                for key in texts:
+                    texts[key] = texts[key].cuda(args.gpu, non_blocking=True)
+            else:
+                texts = texts.cuda(args.gpu, non_blocking=True)
 
         data_time = time.time() - end
 
@@ -248,7 +252,11 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             images, texts, labels = batch
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
-                #texts = texts.cuda(args.gpu, non_blocking=True)
+                if args.new_model:
+                    for key in texts:
+                        texts[key] = texts[key].cuda(args.gpu, non_blocking=True)
+                else:
+                    texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
             all_image_features.append(image_features)
@@ -383,7 +391,11 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
             images, texts, labels = batch
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
-                #texts = texts.cuda(args.gpu, non_blocking=True)
+                if args.new_model:
+                    for key in texts:
+                        texts[key] = texts[key].cuda(args.gpu, non_blocking=True)
+                else:
+                    texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
             all_image_features.append(image_features)
