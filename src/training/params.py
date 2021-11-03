@@ -313,6 +313,42 @@ def parse_args():
         action="store_true",
         help="Whether to use the new german tokenizer"
     )
+    parser.add_argument(
+        "--new-model",
+        default=False,
+        action="store_true",
+        help="use the new way to build the model."
+    )
+    parser.add_argument(
+        "--embid-dim", type=int, default=512, help="output feature dimension for both models"
+    )
+    parser.add_argument(
+        "--IN-pretrained",
+        default=False,
+        action='store_true',
+        help="Use the imagenet pretrained model.",
+    )
+    parser.add_argument(
+        "--freeze-vision-model",
+        default=False,
+        action='store_true',
+        help="freeze the backbone of the vision model",
+    )
+    parser.add_argument(
+        "--text-model",
+        type=str,
+        default='bert-base-german-cased',
+        help="name of the pretrained text model",
+    )
+    parser.add_argument(
+        "--transformer-dim", type=int, default=768, help="transformer width"
+    )
+    parser.add_argument(
+        "--freeze-text-model",
+        default=False,
+        action='store_true',
+        help="freeze the backbone of the text model",
+    )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate
 

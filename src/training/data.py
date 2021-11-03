@@ -32,7 +32,7 @@ from collections import defaultdict
 
 class CsvDataset(Dataset):
     def __init__(self, input_filename, transforms_img, transforms_text, transform_bbox, img_key, caption_key,
-                 labels_key=None, bboxes_key=None, sep="\t", use_de_tokenizer=False):
+                 labels_key=None, bboxes_key=None, sep="\t", use_de_tokenizer=False, DE_model=False):
         logging.debug(f'Loading csv data from {input_filename}.')
         df = pd.read_csv(input_filename, sep=sep)
 
@@ -67,6 +67,7 @@ class CsvDataset(Dataset):
         logging.debug('Done loading data.')
 
         self.use_de_tokenizer = use_de_tokenizer
+        self.DE_model = DE_model
 
     def __len__(self):
         return len(self.captions)
@@ -101,11 +102,11 @@ class CsvDataset(Dataset):
                 if self.transform_bbox:
                     image = crop_show_augment(image, labels, bboxes)
 
-            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer)[0]
+            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer, DE_model=self.DE_model)
             image = self.transforms_img(image)
             return image, text, labels
         else:
-            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer)[0]
+            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer, DE_model=self.DE_model)
             image = self.transforms_img(image)
             return image, text, []
 
@@ -238,7 +239,8 @@ def get_csv_dataset(args, preprocess_fn_img, preprocess_fn_text, preprocess_fn_b
         labels_key=args.csv_label_key,
         bboxes_key=args.csv_bbox_key,
         sep=args.csv_separator,
-        use_de_tokenizer=args.use_de_tokenizer)
+        use_de_tokenizer=args.use_de_tokenizer,
+        DE_model=args.new_model)
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None
     shuffle = is_train and sampler is None

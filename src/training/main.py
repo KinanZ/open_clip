@@ -22,6 +22,7 @@ from torch.cuda.amp import GradScaler
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import _transform_default, _transform_custom, load
 from clip.model import convert_weights, CLIP
+from clip.de_model import Clip_de
 from training.train import train, evaluate, evaluate_train
 from training.data import get_data
 from training.params import parse_args
@@ -85,7 +86,14 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         assert os.path.exists(model_config_file)
         with open(model_config_file, 'r') as f:
             model_info = json.load(f)
-        model = CLIP(**model_info)
+
+        if args.new_model:
+            model = Clip_de(embed_dim=args.embid_dim, resnet_model=args.model, IN_pretrained=args.IN_pretrained,
+                            resnet_freeze_bb=args.freeze_vision_model, text_model=args.text_model,
+                            transformer_dim=args.transformer_dim, freeze_transformer=args.freeze_text_model)
+        else:
+            model = CLIP(**model_info)
+
         convert_weights(model)
         if args.default_aug_img:
             preprocess_train_img = _transform_default(model_info['image_resolution'], is_train=True)

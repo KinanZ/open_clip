@@ -244,7 +244,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
            transform_val
 
 
-def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tokenizer: bool = False) -> torch.LongTensor:
+def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tokenizer: bool = False, DE_model: bool = False) -> torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
     Parameters
@@ -259,7 +259,13 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tok
     A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length]
     """
     if use_de_tokenizer:
-        result = de_tokenize(texts)['input_ids']
+        if DE_model:
+            result = de_tokenize(texts).data
+            for key in result:
+                result[key] = result[key][0]
+        else:
+            result = de_tokenize(texts)['input_ids'][0]
+
         return result
     else:
         if isinstance(texts, str):
@@ -275,4 +281,4 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tok
                 tokens = tokens[:context_length]
             result[i, :len(tokens)] = torch.tensor(tokens)
 
-        return result
+        return result[0]
