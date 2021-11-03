@@ -1,6 +1,6 @@
 #PBS -N clip_RN18_de_tokenize_de_model_eh
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=6:gpus=2:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
@@ -29,7 +29,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=35 \
   --lr=0.0001 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=100 \
   --workers=4 \
   --custom-loss-3 \
   --default-aug-img \
