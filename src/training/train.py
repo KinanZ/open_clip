@@ -41,14 +41,10 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
         gathered_labels = [
             torch.zeros_like(labels) for _ in range(world_size)
         ]
-        gathered_texts = [
-            torch.zeros_like(texts) for _ in range(world_size)
-        ]
 
         dist.all_gather(gathered_image_features, image_features)
         dist.all_gather(gathered_text_features, text_features)
         dist.all_gather(gathered_labels, labels)
-        dist.all_gather(gathered_texts, texts)
 
         all_image_features = torch.cat(
             [image_features]
@@ -65,11 +61,22 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
             + gathered_labels[:rank]
             + gathered_labels[rank + 1:]
         )
-        texts = torch.cat(
-            [texts]
-            + gathered_texts[:rank]
-            + gathered_texts[rank + 1:]
-        )
+        if args.new_model:
+            gathered_texts = [torch.zeros_like(texts['input_ids']) for _ in range(world_size)]
+            dist.all_gather(gathered_texts, texts['input_ids'])
+            texts = torch.cat(
+                [texts['input_ids']]
+                + gathered_texts[:rank]
+                + gathered_texts[rank + 1:]
+            )
+        else:
+            gathered_texts = [torch.zeros_like(texts) for _ in range(world_size)]
+            dist.all_gather(gathered_texts, texts)
+            texts = torch.cat(
+                [texts]
+                + gathered_texts[:rank]
+                + gathered_texts[rank + 1:]
+            )
 
         # this is needed to send gradients back everywhere.
         logits_per_image = logit_scale * all_image_features @ all_text_features.t()
