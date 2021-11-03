@@ -127,7 +127,7 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         if args.distributed and args.use_bn_sync:
             model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         if args.distributed:
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         if args.dp:
             model = torch.nn.DataParallel(model, device_ids=args.multigpu)
 
