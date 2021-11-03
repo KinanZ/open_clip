@@ -1,12 +1,10 @@
 {
-    "embed_dim": 512,
-    "IN_pretraned": false,
-    "resnet_name": "resnet18",
+    "embed_dim": 768,
     "image_resolution": 512,
     "vision_layers": [
         2,
-        2,
-        2,
+        3,
+        4,
         2
     ],
     "vision_width": 64,

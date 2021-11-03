@@ -3,7 +3,7 @@ import argparse
 
 def get_default_params(model_name):
     # Params from paper (https://arxiv.org/pdf/2103.00020.pdf)
-    if model_name in ["RN18", "RN50", "RN101", "RN50x4"]:
+    if model_name in ["RN18", "RN18_pretrained", "RN18_256", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4"]:
         return {"lr": 5.0e-4, "beta1": 0.9, "beta2": 0.999, "eps": 1.0e-8}
     elif model_name == "ViT-B/32":
         return {"lr": 5.0e-4, "beta1": 0.9, "beta2": 0.98, "eps": 1.0e-6}
@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument(
         "--logs",
         type=str,
-        default="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/",
+        default="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_2/",
         help="Where to store tensorboard logs. Use None to avoid storing logs.",
     )
     parser.add_argument(
@@ -130,7 +130,7 @@ def parse_args():
     )
     parser.add_argument(
         "--model",
-        choices=["RN18", "RN50", "RN101", "RN50x4", "ViT-B/32"],
+        choices=["RN18", "RN18_pretrained", "RN18_256", "RN18ish", "RN18ish_256", "RN50", "RN101", "RN50x4", "ViT-B/32"],
         default="RN50",
         help="Name of the vision backbone to use.",
     )
@@ -161,6 +161,12 @@ def parse_args():
         default='',
         type=str,
         help="Options are ['wandb', 'tensorboard', 'wandb,tensorboard']"
+    )
+    parser.add_argument(
+        "--eval-train",
+        default=False,
+        action="store_true",
+        help="an option to evaluate the train set"
     )
     parser.add_argument(
         "--wandb-notes",
@@ -197,16 +203,115 @@ def parse_args():
     )
     # My params
     parser.add_argument(
-        "--default-aug",
+        "--set-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the set augment function on the captions"
+    )
+    parser.add_argument(
+        "--hflip-aug",
+        default=False,
+        action="store_true",
+        help="Whether to use the horizontal flip function on image and caption"
+    )
+    parser.add_argument(
+        "--negative-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment negative on the captions"
+    )
+    parser.add_argument(
+        "--positive-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment positive on the captions"
+    )
+    parser.add_argument(
+        "--skip-aug-text",
+        default=False,
+        action="store_true",
+        help="Whether to use the augment skipping some words and replacing them with _ "
+    )
+    parser.add_argument(
+        "--csv-label-key",
+        type=str,
+        default="labels",
+        help="For csv-like datasets, the name of the key for the labels."
+    )
+    parser.add_argument(
+        "--csv-bbox-key",
+        type=str,
+        default="bboxes",
+        help="For csv-like datasets, the name of the key for the bboxes."
+    )
+    parser.add_argument(
+        "--default-loss",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 2"
+    )
+    parser.add_argument(
+        "--custom-loss-1",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 1"
+    )
+    parser.add_argument(
+        "--custom-loss-3",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 3"
+    )
+    parser.add_argument(
+        "--custom-loss-4",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 4"
+    )
+    parser.add_argument(
+        "--custom-loss-5",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 4"
+    )
+    parser.add_argument(
+        "--custom-eval",
+        default=False,
+        action="store_true",
+        help="Updated evaluations"
+    )
+    parser.add_argument(
+        "--seed", type=int, default=101, help="random seed"
+    )
+    parser.add_argument(
+        "--t-sne",
+        default=False,
+        action="store_true",
+        help="log feature embedding?"
+    )
+    parser.add_argument(
+        "--default-aug-img",
         default=False,
         action="store_true",
         help="Whether to use the default clip transforms"
     )
     parser.add_argument(
-        "--custom-aug",
+        "--custom-aug-img",
         default=False,
         action="store_true",
         help="Whether to use our custom transforms"
+    )
+    parser.add_argument(
+        "--bbox-aug-img",
+        default=False,
+        action="store_true",
+        help="Whether to use bbox aug on the images"
+    )
+    parser.add_argument(
+        "--use-de-tokenizer",
+        default=False,
+        action="store_true",
+        help="Whether to use the new german tokenizer"
     )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate

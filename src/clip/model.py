@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torchvision import models as models
 
 
 class Bottleneck(nn.Module):
@@ -242,6 +243,8 @@ class CLIP(nn.Module):
     def __init__(self,
                  embed_dim: int,
                  # vision
+                 IN_pretraned: bool,
+                 resnet_name: str,
                  image_resolution: int,
                  vision_layers: Union[Tuple[int, int, int, int], int],
                  vision_width: int,
@@ -259,13 +262,18 @@ class CLIP(nn.Module):
 
         if isinstance(vision_layers, (tuple, list)):
             vision_heads = vision_width * 32 // 64
-            self.visual = ModifiedResNet(
-                layers=vision_layers,
-                output_dim=embed_dim,
-                heads=vision_heads,
-                input_resolution=image_resolution,
-                width=vision_width
-            )
+            if IN_pretraned:
+                if resnet_name == "resnet18":
+                    self.visual = models.resnet18(progress=True, pretrained=True)
+                    self.visual.fc = nn.Linear(in_features=self.visual.fc.in_features, out_features=embed_dim)
+            else:
+                self.visual = ModifiedResNet(
+                    layers=vision_layers,
+                    output_dim=embed_dim,
+                    heads=vision_heads,
+                    input_resolution=image_resolution,
+                    width=vision_width
+                )
         else:
             vision_heads = vision_width // 64
             self.visual = VisualTransformer(
