@@ -259,6 +259,10 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                     texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
+            
+            if args.new_model:
+                texts = texts['input_ids']
+
             all_image_features.append(image_features)
             all_text_features.append(text_features)
             all_labels.append(labels)
@@ -398,6 +402,10 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                     texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
+
+            if args.new_model:
+                texts = texts['input_ids']
+
             all_image_features.append(image_features)
             all_text_features.append(text_features)
             all_labels.append(labels)
