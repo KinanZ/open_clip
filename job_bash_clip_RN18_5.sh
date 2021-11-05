@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_default_de_closs6
+#PBS -N clip_RN18_default_de_closs3w
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_default_de_closs6' \
+  --name='clip_RN18_default_de_closs3w' \
   --save-frequency 49 \
   --report-to tensorboard \
   --t-sne \
@@ -31,8 +31,8 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --wd=0.1 \
   --epochs=100 \
   --workers=4 \
-  --custom-loss-6 \
-  --closs6-0-w=0.5 \
+  --custom-loss-3w \
+  --c0-weight=0.5 \
   --default-aug-img \
   --eval-train \
   --use-de-tokenizer \

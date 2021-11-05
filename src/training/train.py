@@ -93,17 +93,27 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
                 len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
-    elif args.custom_loss_3:
+    elif args.custom_loss_3 or args.custom_loss_3w:
         ground_truth = torch.eye(
             len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        rand_vec = torch.rand(len(logits_per_image))
+        mask = rand_vec > (1 - args.c0_weight)
         for i in range(
                 len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
             if labels[i][0] == 1:
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                 ground_truth[i][mask_same] = 1
-    elif args.custom_loss_4:
+            else:
+                mask[i] = True
+        if args.custom_loss_3w:
+            ground_truth = ground_truth[mask, :]
+            logits_per_image = logits_per_image[mask, :]
+            logits_per_text = logits_per_text[mask, :]
+    elif args.custom_loss_4 or args.custom_loss_4w:
         ground_truth = torch.eye(
             len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        rand_vec = torch.rand(len(logits_per_image))
+        mask = rand_vec > (1 - args.c0_weight)
         for i in range(
                 len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
             if labels[i][0] == 1:
@@ -112,24 +122,17 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
             else:
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                 ground_truth[i][mask_same] = 1
+                mask[i] = True
+        if args.custom_loss_4w:
+            ground_truth = ground_truth[mask, :]
+            logits_per_image = logits_per_image[mask, :]
+            logits_per_text = logits_per_text[mask, :]
     elif args.custom_loss_5:
         ground_truth = torch.eye(
             len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
         for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on samples with the same text)
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
             ground_truth[i][mask_same] = 1
-    elif args.custom_loss_6:
-        ground_truth = torch.eye(
-            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        rand_vec = torch.rand(len(logits_per_image))
-        mask = rand_vec > (1 - args.closs6_0_w)
-        for i in range(
-                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
-            if labels[i][0] == 1:
-                mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
-                ground_truth[i][mask_same] = 1
-            else:
-                mask[i] = True
     else:  # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
 
@@ -288,7 +291,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3 or args.custom_loss_6:
+            elif args.custom_loss_3 or args.custom_loss_3w:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(
@@ -296,7 +299,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                     if labels[i][0] == 1:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_4:
+            elif args.custom_loss_4 or args.custom_loss_4w:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(
@@ -431,7 +434,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3 or args.custom_loss_6:
+            elif args.custom_loss_3 or args.custom_loss_3w:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(
@@ -439,7 +442,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                     if labels[i][0] == 1:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_4:
+            elif args.custom_loss_4 or args.custom_loss_4w:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(

@@ -272,16 +272,28 @@ def parse_args():
         "--custom-loss-5",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 4"
+        help="Whether to use our custom loss function num 5"
     )
     parser.add_argument(
-        "--custom-loss-6",
+        "--custom-loss-3w",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 4"
+        help="Whether to use our custom loss function num 6"
     )
     parser.add_argument(
-        "--closs6-0-w", type=float, default=0.5, help="weight of healthy class in custom loss 6"
+        "--custom-loss-4w",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 7"
+    )
+    parser.add_argument(
+        "--custom-loss-5w",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 7"
+    )
+    parser.add_argument(
+        "--c0-weight", type=float, default=0.5, help="weight of healthy class in custom loss 6"
     )
     parser.add_argument(
         "--custom-eval",
