@@ -275,6 +275,15 @@ def parse_args():
         help="Whether to use our custom loss function num 4"
     )
     parser.add_argument(
+        "--custom-loss-6",
+        default=False,
+        action="store_true",
+        help="Whether to use our custom loss function num 4"
+    )
+    parser.add_argument(
+        "--closs6-0-w", type=float, default=0.5, help="weight of healthy class in custom loss 6"
+    )
+    parser.add_argument(
         "--custom-eval",
         default=False,
         action="store_true",

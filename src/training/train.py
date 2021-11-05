@@ -118,6 +118,18 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
         for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on samples with the same text)
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
             ground_truth[i][mask_same] = 1
+    elif args.custom_loss_6:
+        ground_truth = torch.eye(
+            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        rand_vec = torch.rand(len(logits_per_image))
+        mask = rand_vec > (1 - args.closs6_0_w)
+        for i in range(
+                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+            if labels[i][0] == 1:
+                mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
+                ground_truth[i][mask_same] = 1
+            else:
+                mask[i] = True
     else:  # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
 
@@ -259,7 +271,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                     texts = texts.cuda(args.gpu, non_blocking=True)
 
             image_features, text_features, logit_scale = model(images, texts)
-            
+
             if args.new_model:
                 texts = texts['input_ids']
 
@@ -276,7 +288,7 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3:
+            elif args.custom_loss_3 or args.custom_loss_6:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(
@@ -419,7 +431,7 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3:
+            elif args.custom_loss_3 or args.custom_loss_6:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
                 for i in range(
