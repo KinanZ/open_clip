@@ -26,7 +26,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-bbox-key bboxes \
   --csv-separator="," \
   --warmup 2500 \
-  --batch-size=38 \
+  --batch-size=36 \
   --lr=0.00015 \
   --wd=0.1 \
   --epochs=2 \
