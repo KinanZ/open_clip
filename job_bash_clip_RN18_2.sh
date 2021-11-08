@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_default_closs3_test
+#PBS -N clip_RN18_closs3_hflip
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_default_closs3_test' \
+  --name='clip_RN18_closs3_hflip' \
   --save-frequency 49 \
   --report-to tensorboard \
   --t-sne \
@@ -29,10 +29,11 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=36 \
   --lr=0.00015 \
   --wd=0.1 \
-  --epochs=2 \
+  --epochs=100 \
   --workers=4 \
   --custom-loss-3 \
   --default-aug-img \
+  --hflip-aug \
   --eval-train \
   --custom-eval \
   --seed=101 \
