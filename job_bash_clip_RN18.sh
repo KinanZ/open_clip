@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_default_closs3_again' \
+  --name='clip_RN18_default_closs3_bs' \
   --save-frequency 49 \
   --report-to tensorboard \
   --t-sne \
