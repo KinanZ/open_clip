@@ -27,7 +27,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-separator="," \
   --warmup 2500 \
   --batch-size=36 \
-  --lr=0.00015 \
+  --lr=0.000075 \
   --wd=0.1 \
   --epochs=100 \
   --workers=4 \
