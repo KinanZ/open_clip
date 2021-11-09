@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_default_closs3_again
+#PBS -N clip_RN18_default_closs3_bs
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=16gb,walltime=24:00:00
 #PBS -j oe
@@ -25,8 +25,8 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-bbox-key bboxes \
   --csv-separator="," \
-  --warmup 2500 \
-  --batch-size=36 \
+  --warmup 1000 \
+  --batch-size=35 \
   --lr=0.000075 \
   --wd=0.1 \
   --epochs=100 \
@@ -34,8 +34,13 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --custom-loss-3 \
   --default-aug-img \
   --eval-train \
+  --use-de-tokenizer \
   --custom-eval \
   --seed=101 \
   --model RN18 \
+  --new-model \
+  --embid-dim=512 \
+  --IN-pretrained \
+  --transformer-dim=768 \
   --use-bn-sync \
   --dist-url 'tcp://localhost:10025'
