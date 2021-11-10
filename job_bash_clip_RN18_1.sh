@@ -43,5 +43,4 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --embid-dim=512 \
   --IN-pretrained \
   --transformer-dim=768 \
-  --use-bn-sync \
   --dist-url 'tcp://localhost:10025'
