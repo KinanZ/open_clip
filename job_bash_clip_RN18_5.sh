@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_closs3_skip_some
+#PBS -N clip_RN18_closs3_skip_some_again
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=32gb,walltime=24:00:00
 #PBS -j oe
@@ -25,9 +25,9 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-bbox-key bboxes \
   --csv-separator="," \
-  --warmup 1000 \
+  --warmup 1500 \
   --batch-size=35 \
-  --lr=0.000075 \
+  --lr=0.00005 \
   --wd=0.1 \
   --epochs=100 \
   --workers=4 \
