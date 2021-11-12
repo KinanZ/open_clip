@@ -25,9 +25,9 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --csv-label-key labels \
   --csv-bbox-key bboxes \
   --csv-separator="," \
-  --warmup 1500 \
+  --warmup 1000 \
   --batch-size=35 \
-  --lr=0.00005 \
+  --lr=0.000075 \
   --wd=0.1 \
   --epochs=100 \
   --workers=4 \
@@ -37,7 +37,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --eval-train \
   --use-de-tokenizer \
   --custom-eval \
-  --seed=101 \
+  --seed=10 \
   --model RN18 \
   --new-model \
   --embid-dim=512 \
