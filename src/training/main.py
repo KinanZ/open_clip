@@ -48,6 +48,14 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
     args.rank = gpu
     setup_worker_logging(args.rank, log_queue, args.log_level)
 
+    # initialize the random seed
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
     # Log and save params.
     if is_master(args):
         logging.info("Params:")
@@ -186,8 +194,8 @@ def main_worker(gpu, ngpus_per_node, log_queue, args):
         else:
             logging.info("=> no checkpoint found at '{}'".format(args.resume))
 
-    cudnn.benchmark = True
-    cudnn.deterministic = False
+    #cudnn.benchmark = True
+    #cudnn.deterministic = False
 
     # determine if this worker should save logs and checkpoints.
     # only do so if it is the 0th worker.
@@ -267,9 +275,12 @@ def main():
         )
 
     # initialize the random seed
-    random.seed(args.seed)
     torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
     np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
     if args.copy_codebase:
         import sys, subprocess
