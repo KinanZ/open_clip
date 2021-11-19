@@ -29,8 +29,8 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --batch-size=35 \
   --lr=0.000075 \
   --wd=0.1 \
-  --epochs=100 \
-  --workers=4 \
+  --epochs=50 \
+  --workers=2 \
   --custom-loss-3 \
   --default-aug-img \
   --eval-train \

@@ -252,7 +252,7 @@ def get_csv_dataset(args, preprocess_fn_img, preprocess_fn_text, preprocess_fn_b
         num_workers=args.workers,
         pin_memory=True,
         sampler=sampler,
-        drop_last=is_train,
+        drop_last=True,
     )
     dataloader.num_samples = num_samples
     dataloader.num_batches = len(dataloader)
