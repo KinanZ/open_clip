@@ -1,4 +1,4 @@
-#PBS -N clip_RN18_default_closs3_101_1
+#PBS -N clip_RN18_default_closs3_101_1_again
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=36gb,walltime=24:00:00
 #PBS -j oe
