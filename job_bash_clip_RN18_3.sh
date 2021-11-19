@@ -1,6 +1,6 @@
 #PBS -N clip_RN18_default_closs3_101_1_again
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=36gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_final/
 
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='clip_RN18_default_closs3_101_1' \
+  --name='clip_RN18_default_closs3_101_1_again' \
   --save-frequency 49 \
   --report-to tensorboard \
   --t-sne \
