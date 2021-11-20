@@ -274,15 +274,6 @@ def main():
             gmtime(),
         )
 
-    # initialize the random seed
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    np.random.seed(args.seed)
-    random.seed(args.seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
     if args.copy_codebase:
         import sys, subprocess
         from shutil import copytree, ignore_patterns
