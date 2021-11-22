@@ -1,6 +1,6 @@
-#PBS -N Healthy_grouped_default_again_bns
+#PBS -N Healthy_grouped_default_again_titan
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=36gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
@@ -13,8 +13,8 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='Healthy_grouped_default_again_bns' \
-  --save-frequency 49 \
+  --name='Healthy_grouped_default_again_titan' \
+  --save-frequency 100 \
   --report-to tensorboard \
   --t-sne \
   --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
@@ -42,5 +42,4 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --embid-dim=512 \
   --IN-pretrained \
   --transformer-dim=768 \
-  --use-bn-sync
   --dist-url 'tcp://localhost:10025'
