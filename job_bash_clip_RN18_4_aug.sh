@@ -1,6 +1,6 @@
 #PBS -N Healthy_Caption_grouped_pos_12
 #PBS -S /bin/bash
-#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaTITANX,mem=36gb,walltime=24:00:00
+#PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
 #PBS -j oe
 #PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
 
