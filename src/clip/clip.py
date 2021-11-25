@@ -122,7 +122,7 @@ def _transform_custom(n_px: int, is_train: bool):
             RandomRotation(30),
             _convert_to_rgb,
             ToTensor(),
-            RandomApply(ElasticDeform(control_points_num=3, sigma=15, axis=(1, 2)), p=0.5),
+            ElasticDeform(control_points_num=3, sigma=15, axis=(1, 2)),
             normalize,
         ])
     else:
