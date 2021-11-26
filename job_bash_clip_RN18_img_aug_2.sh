@@ -1,4 +1,4 @@
-#PBS -N Healthy_Caption_grouped_default_again
+#PBS -N Healthy_Caption_grouped_img_aug
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
 #PBS -j oe
@@ -13,8 +13,8 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='Healthy_Caption_grouped_default_again' \
-  --save-frequency 100 \
+  --name='Healthy_Caption_grouped_img_aug' \
+  --save-frequency 49 \
   --report-to tensorboard \
   --t-sne \
   --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
@@ -32,7 +32,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --epochs=100 \
   --workers=2 \
   --custom-loss-4 \
-  --default-aug-img \
+  --custom-aug-img \
   --eval-train \
   --use-de-tokenizer \
   --custom-eval \
@@ -42,4 +42,5 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --embid-dim=512 \
   --IN-pretrained \
   --transformer-dim=768 \
+  --hflip-aug \
   --dist-url 'tcp://localhost:10025'
