@@ -1,4 +1,4 @@
-#PBS -N Healthy_Caption_grouped_default_again
+#PBS -N Healthy_Caption_grouped_default_333
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
 #PBS -j oe
@@ -13,7 +13,7 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='Healthy_Caption_grouped_default_again' \
+  --name='Healthy_Caption_grouped_default_333' \
   --save-frequency 100 \
   --report-to tensorboard \
   --t-sne \
@@ -36,7 +36,7 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --eval-train \
   --use-de-tokenizer \
   --custom-eval \
-  --seed=123 \
+  --seed=333 \
   --model RN18 \
   --new-model \
   --embid-dim=512 \
