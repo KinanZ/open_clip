@@ -16,20 +16,14 @@ import sys
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.model import build_model
 from clip.tokenizer import SimpleTokenizer as _Tokenizer
-from clip.de_tokenizer import Tokenizer as de_Tokenizer
+
 
 import elasticdeform.torch as etorch
 import numpy as np
-from transformers import AutoTokenizer
+
 
 __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
-
-try:
-    de_tokenize = de_Tokenizer(AutoTokenizer.from_pretrained("bert-base-german-cased"), context_length=118)
-except:
-    print('FAILED TO LOAD TOKENIZER!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    exit()
 
 _MODELS = {
     "RN50": "https://openaipublic.azureedge.net/clip/models/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt",
@@ -122,7 +116,7 @@ def _transform_custom(n_px: int, is_train: bool):
             RandomRotation(30),
             _convert_to_rgb,
             ToTensor(),
-            ElasticDeform(control_points_num=3, sigma=15, axis=(1, 2)),
+            RandomApply([ElasticDeform(control_points_num=3, sigma=15, axis=(1, 2))], p=0.5),
             normalize,
         ])
     else:
@@ -250,7 +244,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
            transform_val
 
 
-def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tokenizer: bool = False, DE_model: bool = False) -> torch.LongTensor:
+def tokenize(texts: Union[str, List[str]], de_tokenize, context_length: int = 118, DE_model: bool = False) -> torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
     Parameters
@@ -264,7 +258,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 118, use_de_tok
     -------
     A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length]
     """
-    if use_de_tokenizer:
+    if de_tokenize is not None:
         if DE_model:
             result = de_tokenize(texts).data
             for key in result:

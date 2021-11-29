@@ -24,9 +24,21 @@ def is_master(args):
     return (not args.distributed) or args.gpu == 0
 
 
-def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
+def get_weights(labels, class_weights):
+    weights = torch.ones(labels.shape[0])
+    for i in range(labels.shape[0]):
+        sample_label = torch.where(labels[i])[0]
+        sample_weights = []
+        for class_label in sample_label:
+            sample_weights.append(class_weights[class_label.item()])
+        weights[i] = max(sample_weights)
+    return weights
+
+
+def get_loss(model, images, loss_img, loss_txt, class_weights, texts, labels, args):
     image_features, text_features, logit_scale = model(images, texts)
     logit_scale = logit_scale.mean()
+
     if args.distributed and args.aggregate:
         world_size = dist.get_world_size()
         rank = dist.get_rank()
@@ -86,63 +98,51 @@ def get_loss(model, images, loss_img, loss_txt, texts, labels, args):
         logits_per_image = logit_scale * image_features @ text_features.t()
         logits_per_text = logit_scale * text_features @ image_features.t()
 
-    if args.custom_loss_1:  # The approach where we pull the samples from each class together
-        ground_truth = torch.zeros(
-            logits_per_image.shape).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        for i in range(
-                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class
+    if args.Label_grouped: # Basically supervised
+        ground_truth = torch.zeros(logits_per_image.shape).float()
+        for i in range(len(logits_per_image)):
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
-    elif args.custom_loss_3 or args.custom_loss_3w:
-        ground_truth = torch.eye(
-            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        rand_vec = torch.rand(len(logits_per_image))
-        mask = rand_vec > (1 - args.c0_weight)
-        for i in range(
-                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+    elif args.Healthy_grouped:
+        ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(len(logits_per_image)):
+            # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the healthy class
             if labels[i][0] == 1:
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                 ground_truth[i][mask_same] = 1
-            else:
-                mask[i] = True
-        if args.custom_loss_3w:
-            ground_truth = ground_truth[mask, :]
-            logits_per_image = logits_per_image[mask, :]
-            logits_per_text = logits_per_text[mask, :]
-    elif args.custom_loss_4 or args.custom_loss_4w:
-        ground_truth = torch.eye(
-            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        rand_vec = torch.rand(len(logits_per_image))
-        mask = rand_vec > (1 - args.c0_weight)
-        for i in range(
-                len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+    elif args.Healthy_Caption_grouped:
+        ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(len(logits_per_image)):
             if labels[i][0] == 1:
+                # replace 0 with 1 if the sample from this column belongs the healthy class
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                 ground_truth[i][mask_same] = 1
             else:
+                # replace 0 with 1 if the sample from this column belongs the same deseased class and have the same caption
                 mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                 ground_truth[i][mask_same] = 1
-                mask[i] = True
-        if args.custom_loss_4w:
-            ground_truth = ground_truth[mask, :]
-            logits_per_image = logits_per_image[mask, :]
-            logits_per_text = logits_per_text[mask, :]
-    elif args.custom_loss_5:
-        ground_truth = torch.eye(
-            len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-        for i in range(len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on samples with the same text)
+    elif args.Caption_grouped:
+        ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+        for i in range(len(logits_per_image)):
+            # replace 0 with 1 if the sample from this column belongs the same class and have the same caption
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
             ground_truth[i][mask_same] = 1
     else:  # Default Clip loss
         ground_truth = torch.arange(len(logits_per_image)).long()
 
+    weights = get_weights(labels, class_weights)
+
     if args.gpu is not None:
         ground_truth = ground_truth.cuda(args.gpu, non_blocking=True)
+        weights = weights.cuda(args.gpu, non_blocking=True)
 
-    total_loss = (
-                         loss_img(logits_per_image, ground_truth)
-                         + loss_txt(logits_per_text, ground_truth)
-                 ) / 2
+    loss_vision = loss_img(logits_per_image, ground_truth)
+    loss_vision = (loss_vision * weights).mean()
+    loss_text = loss_txt(logits_per_text, ground_truth)
+    loss_text = (loss_text * weights).mean()
+
+    total_loss = (loss_vision + loss_text) / 2
+
     return total_loss
 
 
@@ -154,11 +154,23 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
     dataloader, sampler = data['train'].dataloader, data['train'].sampler
 
     if args.default_loss:
-        loss_img = nn.CrossEntropyLoss()
-        loss_txt = nn.CrossEntropyLoss()
+        loss_img = nn.CrossEntropyLoss(reduction='none')
+        loss_txt = nn.CrossEntropyLoss(reduction='none')
     else:
-        loss_img = nn.BCEWithLogitsLoss()
-        loss_txt = nn.BCEWithLogitsLoss()
+        loss_img = nn.BCEWithLogitsLoss(reduction='none')
+        loss_txt = nn.BCEWithLogitsLoss(reduction='none')
+
+    if args.use_weights_1:
+        # class weights where the weight of a class is: 1 - (class_count / total_count)
+        class_weights = {0: 0.5, 1: 0.995, 2: 0.927, 3: 0.964, 4: 0.989, 5: 0.994, 6: 0.993, 7: 0.997,
+                   8: 0.856, 9: 0.903, 10: 0.998, 11: 0.879, 12: 0.9984, 13: 0.972, 14: 0.988}
+    elif args.use_weights_2:
+        # class weights where the weight of a class is: total_count - (num_of_classes / class_count)
+        class_weights = {0: 0.133, 1: 14.129, 2: 0.913, 3: 1.868, 4: 6.191, 5: 10.805, 6: 9.501, 7: 26.24,
+                   8: 0.461, 9: 0.685, 10: 32.415, 11: 0.552, 12: 30.61, 13: 2.35, 14: 5.681}
+    else:
+        class_weights = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0,
+                   8: 1.0, 9: 1.0, 10: 1.0, 11: 1.0, 12: 1.0, 13: 1.0, 14: 1.0}
 
     if args.gpu is not None:
         loss_img = loss_img.cuda(args.gpu)
@@ -194,13 +206,13 @@ def train(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None
         # with automatic mixed precision.
         if args.precision == "amp":
             with autocast():
-                total_loss = get_loss(model, images, loss_img, loss_txt, texts, labels, args)
+                total_loss = get_loss(model, images, loss_img, loss_txt, class_weights, texts, labels, args)
                 scaler.scale(total_loss).backward()
                 scaler.step(optimizer)
             scaler.update()
 
         else:
-            total_loss = get_loss(model, images, texts, labels, args)
+            total_loss = get_loss(model, images, loss_img, loss_txt, class_weights, texts, labels, args)
             total_loss.backward()
             optimizer.step()
 
@@ -286,35 +298,36 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
 
-            if args.custom_loss_1:
+            if args.Label_grouped:
                 ground_truth = torch.zeros(logits_per_image.shape).float()
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3 or args.custom_loss_3w:
+            elif args.Healthy_grouped:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+                for i in range(len(logits_per_image)):
+                    # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the healthy class
                     if labels[i][0] == 1:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_4 or args.custom_loss_4w:
+            elif args.Healthy_Caption_grouped:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+                for i in range(len(logits_per_image)):
                     if labels[i][0] == 1:
+                        # replace 0 with 1 if the sample from this column belongs the healthy class
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
                     else:
+                        # replace 0 with 1 if the sample from this column belongs the same deseased class and have the same caption
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_5:
+            elif args.Caption_grouped:
                 ground_truth = torch.eye(
                     len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on samples with the same text)
+                for i in range(len(logits_per_image)):
+                    # replace 0 with 1 if the sample from this column belongs the same class and have the same caption
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                     ground_truth[i][mask_same] = 1
             else:
@@ -335,6 +348,8 @@ def evaluate(model, data, epoch, args, tb_writer=None, steps=None):
         if args.custom_eval:
             metrics = get_metrics_custom(torch.cat(all_image_features),
                                         torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
+        elif args.custom_eval_no_healthy:
+            metrics = get_metrics_custom_no_healthy(torch.cat(all_image_features),torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
         else:
             metrics = get_metrics(torch.cat(all_image_features), torch.cat(all_text_features))
 
@@ -429,35 +444,33 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
             logits_per_image = logit_scale * image_features @ text_features.t()
             logits_per_text = logits_per_image.t()
 
-            if args.custom_loss_1:
+            if args.Label_grouped:
                 ground_truth = torch.zeros(logits_per_image.shape).float()
                 for i in range(len(logits_per_image)):
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                     ground_truth[i][mask_same] = 1
-            elif args.custom_loss_3 or args.custom_loss_3w:
-                ground_truth = torch.eye(
-                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+            elif args.Healthy_grouped:
+                ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(len(logits_per_image)):
+                    # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the healthy class
                     if labels[i][0] == 1:
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_4 or args.custom_loss_4w:
-                ground_truth = torch.eye(
-                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class or disease with the same text)
+            elif args.Healthy_Caption_grouped:
+                ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(len(logits_per_image)):
                     if labels[i][0] == 1:
+                        #replace 0 with 1 if the sample from this column belongs the healthy class
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
                         ground_truth[i][mask_same] = 1
                     else:
+                        # replace 0 with 1 if the sample from this column belongs the same deseased class and have the same caption
                         mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                         ground_truth[i][mask_same] = 1
-            elif args.custom_loss_5:
-                ground_truth = torch.eye(
-                    len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-                for i in range(
-                        len(logits_per_image)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on samples with the same text)
+            elif args.Caption_grouped:
+                ground_truth = torch.eye(len(logits_per_image)).float()  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+                for i in range(len(logits_per_image)):
+                    # replace 0 with 1 if the sample from this column belongs the same class and have the same caption
                     mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
                     ground_truth[i][mask_same] = 1
             else:
@@ -478,6 +491,8 @@ def evaluate_train(model, data, epoch, args, tb_writer=None, steps=None):
         if args.custom_eval:
             metrics = get_metrics_custom(torch.cat(all_image_features),
                                          torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
+        elif args.custom_eval_no_healthy:
+            metrics = get_metrics_custom_no_healthy(torch.cat(all_image_features),torch.cat(all_text_features), torch.cat(all_labels), torch.cat(all_texts))
         else:
             metrics = get_metrics(torch.cat(all_image_features), torch.cat(all_text_features))
 
@@ -555,12 +570,13 @@ def get_metrics_custom(image_features, text_features, labels, texts):
     logits = {"image_to_text": logits_per_image, "text_to_image": logits_per_text}
     ground_truth = torch.eye(
         len(logits_per_text)).float().to(logits_per_image.device)  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
-    for i in range(
-            len(logits_per_text)):  # instead of an eye matrix we have 1 on the diagonal and 1 if the sample from this column belongs to the same class (Only apply on the healthy class)
+    for i in range(len(logits_per_text)):
         if labels[i][0] == 1:
+            # replace 0 with 1 if the sample from this column belongs the healthy class
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(labels[i], labels[j])]
             ground_truth[i][mask_same] = 1
         else:
+            # replace 0 with 1 if the sample from this column belongs the same deseased class and have the same caption
             mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
             ground_truth[i][mask_same] = 1
 
@@ -568,9 +584,33 @@ def get_metrics_custom(image_features, text_features, labels, texts):
         ranking = torch.argsort(logit, descending=True).to(logits_per_image.device)
         preds = torch.zeros(len(logits_per_text)).to(logits_per_image.device)
         for j in range(len(logits_per_text)):
-            if torch.sum(ground_truth[j]) == 1:
-                preds[j] = torch.where(ranking[j] == j)[0]
-            else:
+            ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1).to(logits_per_image.device)
+            preds[j] = torch.min(torch.where(ranking[j] == ground_truth_sample)[1])
+
+        preds = preds.detach().cpu().numpy()
+        metrics[f"{name}_mean_rank"] = preds.mean() + 1
+        metrics[f"{name}_median_rank"] = np.floor(np.median(preds)) + 1
+        for k in [1, 5, 10]:
+            metrics[f"{name}_R@{k}"] = np.mean(preds < k)
+
+    return metrics
+
+def get_metrics_custom_no_healthy(image_features, text_features, labels, texts):
+    metrics = {}
+    logits_per_image = image_features @ text_features.t()
+    logits_per_text = logits_per_image.t()
+
+    logits = {"image_to_text": logits_per_image, "text_to_image": logits_per_text}
+    ground_truth = torch.eye(
+        len(logits_per_text)).float().to(logits_per_image.device)  # logits_per_image.shape = logits_per_text.shape = ground_truth.shape = batchsize x batchsize
+    for i in range(len(logits_per_text)):
+            mask_same = [j for j in range(len(logits_per_image)) if torch.equal(texts[i], texts[j])]
+            ground_truth[i][mask_same] = 1
+
+    for name, logit in logits.items():
+        ranking = torch.argsort(logit, descending=True).to(logits_per_image.device)
+        preds = torch.zeros(len(logits_per_text)).to(logits_per_image.device)
+        for j in range(len(logits_per_text)):
                 ground_truth_sample = torch.where(ground_truth[j])[0].view(-1, 1).to(logits_per_image.device)
                 preds[j] = torch.min(torch.where(ranking[j] == ground_truth_sample)[1])
 
@@ -581,7 +621,6 @@ def get_metrics_custom(image_features, text_features, labels, texts):
             metrics[f"{name}_R@{k}"] = np.mean(preds < k)
 
     return metrics
-
 
 def onehot_to_int(lst):
     return [i for i, x in enumerate(lst) if x > 0]

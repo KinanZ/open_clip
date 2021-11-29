@@ -26,6 +26,8 @@ import webdataset as wds
 sys.path.append('/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/')
 from clip.clip import tokenize
 from training.text_aug import SetAugmenter, ReplaceAugmenter, groups, skip_some_words
+from clip.de_tokenizer import Tokenizer as de_Tokenizer
+from transformers import AutoTokenizer
 
 from collections import defaultdict
 
@@ -66,8 +68,11 @@ class CsvDataset(Dataset):
             self.text_set_aug = SetAugmenter(self.class2sentences['[0]'])
         logging.debug('Done loading data.')
 
-        self.use_de_tokenizer = use_de_tokenizer
         self.DE_model = DE_model
+        if use_de_tokenizer:
+            self.de_tokenize = de_Tokenizer(AutoTokenizer.from_pretrained("bert-base-german-cased"), context_length=118)
+        else:
+            self.de_tokenize = None
 
     def __len__(self):
         return len(self.captions)
@@ -102,11 +107,11 @@ class CsvDataset(Dataset):
                 if self.transform_bbox:
                     image = crop_show_augment(image, labels, bboxes)
 
-            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer, DE_model=self.DE_model)
+            text = tokenize(text, self.de_tokenize, DE_model=self.DE_model)
             image = self.transforms_img(image)
             return image, text, labels
         else:
-            text = tokenize(text, use_de_tokenizer=self.use_de_tokenizer, DE_model=self.DE_model)
+            text = tokenize(text, self.de_tokenize, DE_model=self.DE_model)
             image = self.transforms_img(image)
             return image, text, []
 

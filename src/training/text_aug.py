@@ -127,15 +127,17 @@ class ReplaceAugmenter:
         return re.sub(self.rl_pattern, repl, sent)
 
 
-def skip_some_words(sent):
-    words = word_tokenize(sent)
-    if np.floor(len(words)/4) > 0:
-        num_skip = np.random.randint(0, np.floor(len(words)/4))
-    else:
-        num_skip = 0
-    idx_skip = [np.random.randint(0, len(words)) for i in range(num_skip)]
-    for idx in idx_skip:
-        words[idx] = '_'
+def skip_some_words(sent, p=0.5):
+    new_sent = sent
+    if np.random.random() < p:
+        words = word_tokenize(sent)
+        if np.floor(len(words)/4) > 0:
+            num_skip = np.random.randint(0, np.floor(len(words)/4))
+        else:
+            num_skip = 0
+        idx_skip = [np.random.randint(0, len(words)) for i in range(num_skip)]
+        for idx in idx_skip:
+            words[idx] = '_'
 
-    new_sent = ' '.join(words)
+        new_sent = ' '.join(words)
     return new_sent

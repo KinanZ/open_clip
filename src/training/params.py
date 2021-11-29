@@ -248,55 +248,40 @@ def parse_args():
         "--default-loss",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 2"
+        help="Whether to use default clip loss"
     )
     parser.add_argument(
-        "--custom-loss-1",
+        "--Label-grouped",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 1"
+        help="class based loss: to group the samples with the same label in the batch together"
     )
     parser.add_argument(
-        "--custom-loss-3",
+        "--Healthy-grouped",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 3"
+        help="class based loss: to group the samples with label 0 (Healthy) in the batch together"
     )
     parser.add_argument(
-        "--custom-loss-4",
+        "--Healthy-Caption-grouped",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 4"
+        help="class based loss: to group the samples with label 0 (Healthy) in the batch together. Additionally group the samples which belong to a deseased class and have the same caption together"
     )
     parser.add_argument(
-        "--custom-loss-5",
+        "--Caption-grouped",
         default=False,
         action="store_true",
-        help="Whether to use our custom loss function num 5"
-    )
-    parser.add_argument(
-        "--custom-loss-3w",
-        default=False,
-        action="store_true",
-        help="Whether to use our custom loss function num 6"
-    )
-    parser.add_argument(
-        "--custom-loss-4w",
-        default=False,
-        action="store_true",
-        help="Whether to use our custom loss function num 7"
-    )
-    parser.add_argument(
-        "--custom-loss-5w",
-        default=False,
-        action="store_true",
-        help="Whether to use our custom loss function num 7"
-    )
-    parser.add_argument(
-        "--c0-weight", type=float, default=0.5, help="weight of healthy class in custom loss 6"
+        help="class based loss: to group the samples which belong to a deseased class and have the same caption together"
     )
     parser.add_argument(
         "--custom-eval",
+        default=False,
+        action="store_true",
+        help="Updated evaluations"
+    )
+    parser.add_argument(
+        "--custom-eval-no-healthy",
         default=False,
         action="store_true",
         help="Updated evaluations"
@@ -369,6 +354,18 @@ def parse_args():
         default=False,
         action='store_true',
         help="freeze the backbone of the text model",
+    )
+    parser.add_argument(
+        "--use-weights-1",
+        default=False,
+        action='store_true',
+        help="use class weights during pretraining where the weight of a class is: 1 - (class_count / total_count)",
+    )
+    parser.add_argument(
+        "--use-weights-2",
+        default=False,
+        action='store_true',
+        help="use class weights during pretraining where the weight of a class is: total_count - (num_of_classes / class_count)",
     )
     args = parser.parse_args()
     args.aggregate = not args.skip_aggregate

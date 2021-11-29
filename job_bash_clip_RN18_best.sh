@@ -1,8 +1,8 @@
-#PBS -N Healthy_Caption_grouped_skip_333
+#PBS -N Healthy_Caption_grouped_img_aug_hflip_pos_123
 #PBS -S /bin/bash
 #PBS -l nodes=1:ppn=6:gpus=4:ubuntu2004:nvidiaGTX1080Ti,mem=36gb,walltime=24:00:00
 #PBS -j oe
-#PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/
+#PBS -o /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_final/
 
 
 homePath='/misc/student/alzouabk/miniconda3'
@@ -13,11 +13,10 @@ nvidia-smi --query-accounted-apps="pid,gpu_util,mem_util,max_memory_usage,time" 
 
 echo 'Training Should start'
 python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/training/main.py \
-  --name='Healthy_Caption_grouped_skip_333' \
-  --save-frequency 49 \
+  --name='Healthy_Caption_grouped_img_aug_hflip_pos_123' \
+  --save-frequency 100 \
   --report-to tensorboard \
-  --t-sne \
-  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs/' \
+  --logs='/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/outputs_final/' \
   --train-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/train_data_no_dup_w_labels_bboxes.csv"  \
   --val-data="/misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/val_data_no_dup_w_labels_bboxes.csv"  \
   --csv-img-key filepath \
@@ -31,16 +30,17 @@ python3 /misc/student/alzouabk/Thesis/self_supervised_pretraining/open_clip/src/
   --wd=0.1 \
   --epochs=100 \
   --workers=2 \
-  --custom-loss-4 \
-  --default-aug-img \
-  --eval-train \
+  --Healthy-Caption-grouped \
+  --use-weights-2 \
+  --custom-aug-img \
+  --hflip-aug \
+  --positive-aug-text \
   --use-de-tokenizer \
   --custom-eval \
-  --seed=333 \
+  --seed=123 \
   --model RN18 \
   --new-model \
   --embid-dim=512 \
   --IN-pretrained \
   --transformer-dim=768 \
-  --skip-aug-text \
   --dist-url 'tcp://localhost:10025'
